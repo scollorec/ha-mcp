@@ -43,10 +43,14 @@ def _connection_record(entry: Any) -> dict[str, Any]:
     """Return a connection summary without endpoint or credential data."""
     state = _entry_state(entry)
     coordinator = getattr(entry, "runtime_data", None)
-    server = _server_identity(coordinator) if coordinator is not None else {
-        "name": None,
-        "version": None,
-    }
+    server = (
+        _server_identity(coordinator)
+        if coordinator is not None
+        else {
+            "name": None,
+            "version": None,
+        }
+    )
     data = getattr(coordinator, "data", None) if coordinator is not None else None
     return {
         "entry_id": entry.entry_id,
@@ -57,9 +61,7 @@ def _connection_record(entry: Any) -> dict[str, Any]:
     }
 
 
-def _do_mcp_connections(
-    hass: HomeAssistant, params: dict[str, Any]
-) -> dict[str, Any]:
+def _do_mcp_connections(hass: HomeAssistant, params: dict[str, Any]) -> dict[str, Any]:
     """List Core MCP config entries without exposing URLs or credentials."""
     entries = hass.config_entries.async_entries(_MCP_DOMAIN)
     return {"connections": [_connection_record(entry) for entry in entries]}
@@ -75,10 +77,7 @@ def _get_loaded_connection(hass: HomeAssistant, entry_id: str) -> tuple[Any, Any
         raise HomeAssistantError("Home Assistant MCP connection is not loaded")
 
     coordinator = getattr(entry, "runtime_data", None)
-    if (
-        coordinator is None
-        or not callable(getattr(coordinator, "async_refresh", None))
-    ):
+    if coordinator is None or not callable(getattr(coordinator, "async_refresh", None)):
         raise HomeAssistantError("Home Assistant MCP connection is not ready")
 
     return entry, coordinator
@@ -88,7 +87,7 @@ async def _refresh_connection(coordinator: Any) -> None:
     """Refresh Core's cached MCP tool list and fail closed on discovery errors."""
     try:
         await coordinator.async_refresh()
-    except Exception as err:  # noqa: BLE001
+    except Exception as err:
         raise HomeAssistantError(
             "Could not refresh the Home Assistant MCP connection"
         ) from err
@@ -111,7 +110,7 @@ def _tool_record(tool: Any) -> dict[str, Any]:
     try:
         # Strict encoding is intentional: never publish a broadened schema.
         input_schema = probatio.to_json_schema(tool.parameters, strict=True)
-    except Exception as err:  # noqa: BLE001
+    except Exception as err:
         _LOGGER.warning(
             "Refusing to expose MCP tool %r because its parameter schema "
             "cannot be represented safely",
@@ -182,7 +181,7 @@ async def _mcp_call_tool_prep(
     tool_args = msg.get("tool_args") or {}
     try:
         validated_args = tool.parameters(dict(tool_args))
-    except Exception as err:  # noqa: BLE001
+    except Exception as err:
         # Do not echo rejected arguments: an argument can contain a secret.
         raise HomeAssistantError(
             f"Arguments do not match the schema for MCP tool {tool_name!r}"
@@ -203,7 +202,7 @@ async def _mcp_call_tool_prep(
 
     try:
         result = await tool.async_call(hass, tool_input, context)
-    except Exception as err:  # noqa: BLE001
+    except Exception as err:
         # Core's wrapper still performs token refresh and starts re-auth when
         # needed. Keep transport exceptions (which may contain endpoint details)
         # out of the WebSocket response.
