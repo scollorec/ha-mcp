@@ -66,7 +66,7 @@ def register_remote_mcp_upstream(
         else None
     )
 
-    def client_factory() -> ProxyClient:
+    def client_factory() -> Any:
         transport = StreamableHttpTransport(url, headers=headers)
         # Never relay HA-MCP caller authorization to a different upstream. Only
         # the explicitly configured bearer token above is sent to this server.
