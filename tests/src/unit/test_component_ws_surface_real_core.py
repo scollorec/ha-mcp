@@ -155,25 +155,15 @@ async def test_every_command_is_registered_and_config_get_is_not(
     assert "ha_mcp_tools/config_get" not in registered
 
 
-@pytest.mark.parametrize(("command", "params"), list(_GATED_COMMANDS.items()))
+@pytest.mark.parametrize(
+    ("command", "params"),
+    list({**_GATED_COMMANDS, **_MCP_BRIDGE_COMMANDS}.items()),
+)
 async def test_a_non_admin_is_refused_every_command(
     component_ws_read_only: MockHAClientWebSocket,
     command: str,
     params: dict[str, Any],
 ) -> None:
-    reply = await ws_call(component_ws_read_only, command, **params)
-
-    assert reply["success"] is False
-    assert reply["error"]["code"] == "unauthorized"
-
-
-@pytest.mark.parametrize(("command", "params"), list(_MCP_BRIDGE_COMMANDS.items()))
-async def test_a_non_admin_is_refused_every_core_mcp_bridge_command(
-    component_ws_read_only: MockHAClientWebSocket,
-    command: str,
-    params: dict[str, Any],
-) -> None:
-    """Core MCP bridge discovery and invocation remain administrator-only."""
     reply = await ws_call(component_ws_read_only, command, **params)
 
     assert reply["success"] is False
