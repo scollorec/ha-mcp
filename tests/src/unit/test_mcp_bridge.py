@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
 import probatio
 import pytest
@@ -149,7 +149,9 @@ async def test_call_tool_uses_core_wrapper_and_validated_arguments(
             }
         ),
         async_call=AsyncMock(
-            return_value=llm.ToolResult(data={"content": [{"type": "text", "text": "ok"}]})
+            return_value=llm.ToolResult(
+                data={"content": [{"type": "text", "text": "ok"}]}
+            )
         ),
     )
     coordinator = SimpleNamespace(
