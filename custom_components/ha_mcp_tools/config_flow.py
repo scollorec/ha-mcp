@@ -62,7 +62,6 @@ from .const import (
     DATA_OAUTH_CLIENT_ID,
     DATA_OAUTH_CLIENT_SECRET,
     DATA_OAUTH_SIGNING_KEY,
-    DATA_REMOTE_MCP_BEARER_TOKEN,
     DATA_SECRET_PATH,
     DATA_WEBHOOK_ID,
     DEFAULT_BIND_HOST,
@@ -94,10 +93,6 @@ from .const import (
     OPT_OAUTH_REGENERATE,
     OPT_PIP_SPEC,
     OPT_REGENERATE_SECRETS,
-    OPT_REMOTE_MCP_BEARER_TOKEN,
-    OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN,
-    OPT_REMOTE_MCP_NAMESPACE,
-    OPT_REMOTE_MCP_URL,
     OPT_SECRET_PATH_OVERRIDE,
     OPT_SERVER_PORT,
     OPT_SERVER_URL,
@@ -116,7 +111,12 @@ from .oauth_redirect_allowlist import (
     normalize_allowlist,
     stored_allowlist,
 )
-from .remote_mcp import remote_mcp_form_errors
+from .remote_mcp import (
+    adopt_remote_mcp_token,
+    normalize_remote_mcp_options,
+    remote_mcp_form_errors,
+    remote_mcp_option_fields,
+)
 from .server_pin import server_pins
 from .spec_dist import version_dist
 
@@ -470,8 +470,12 @@ class HaMcpServerOptionsFlow(OptionsFlow):
                     data[OPT_OAUTH_REDIRECT_ALLOWLIST] = stored
                 if credential is not None:
                     self._adopt_token(*credential, data)
-                self._adopt_remote_mcp_token_from_input(
-                    user_input, data, schedule_reload=credential is None
+                adopt_remote_mcp_token(
+                    self.hass,
+                    self.config_entry,
+                    user_input,
+                    data,
+                    schedule_reload=credential is None,
                 )
                 return self.async_create_entry(title="", data=data)
 
@@ -539,28 +543,7 @@ class HaMcpServerOptionsFlow(OptionsFlow):
                         "suggested_value": suggested_values.get(OPT_SERVER_URL, "")
                     },
                 ): str,
-                vol.Optional(
-                    OPT_REMOTE_MCP_NAMESPACE,
-                    description={
-                        "suggested_value": suggested_values.get(
-                            OPT_REMOTE_MCP_NAMESPACE, "remote"
-                        )
-                    },
-                ): str,
-                vol.Optional(
-                    OPT_REMOTE_MCP_URL,
-                    description={
-                        "suggested_value": suggested_values.get(OPT_REMOTE_MCP_URL, "")
-                    },
-                ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
-                # Never pre-filled or persisted in options. An empty value keeps
-                # the stored token; use the explicit clear checkbox to remove it.
-                vol.Optional(OPT_REMOTE_MCP_BEARER_TOKEN): TextSelector(
-                    TextSelectorConfig(
-                        type=TextSelectorType.PASSWORD, autocomplete="off"
-                    )
-                ),
-                vol.Optional(OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN, default=False): bool,
+                **remote_mcp_option_fields(suggested_values, form_values),
                 vol.Required(
                     OPT_ENABLE_WEBHOOK,
                     default=bool(form_values.get(OPT_ENABLE_WEBHOOK, True)),
@@ -726,46 +709,6 @@ class HaMcpServerOptionsFlow(OptionsFlow):
         if _reload_relevant(options) == _reload_relevant(entry.options):
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
 
-    def _adopt_remote_mcp_token_from_input(
-        self,
-        user_input: Mapping[str, Any],
-        options: Mapping[str, Any],
-        *,
-        schedule_reload: bool,
-    ) -> None:
-        """Adopt an optional token entered in the options form."""
-        token = str(user_input.get(OPT_REMOTE_MCP_BEARER_TOKEN, "") or "").strip()
-        clear = bool(user_input.get(OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN, False))
-        if token or clear:
-            self._adopt_remote_mcp_token(
-                token or None, options, schedule_reload=schedule_reload
-            )
-
-    def _adopt_remote_mcp_token(
-        self,
-        token: str | None,
-        options: Mapping[str, Any],
-        *,
-        schedule_reload: bool = True,
-    ) -> None:
-        """Keep the upstream bearer token out of entry.options and forms."""
-        entry = self.config_entry
-        data = dict(entry.data)
-        if token:
-            data[DATA_REMOTE_MCP_BEARER_TOKEN] = token
-        else:
-            data.pop(DATA_REMOTE_MCP_BEARER_TOKEN, None)
-        if data == entry.data:
-            return
-        self.hass.config_entries.async_update_entry(entry, data=data)
-        # A token-only save has no options delta to trigger the normal listener.
-        from .embedded_entry import _reload_relevant
-
-        if schedule_reload and _reload_relevant(options) == _reload_relevant(
-            entry.options
-        ):
-            self.hass.config_entries.async_schedule_reload(entry.entry_id)
-
     @staticmethod
     def _connect_path_override_errors(
         user_input: Mapping[str, Any],
@@ -827,22 +770,7 @@ class HaMcpServerOptionsFlow(OptionsFlow):
             cleaned[OPT_SERVER_URL] = server_url
         else:
             cleaned.pop(OPT_SERVER_URL, None)
-        remote_url = str(cleaned.get(OPT_REMOTE_MCP_URL, "") or "").strip()
-        if remote_url:
-            cleaned[OPT_REMOTE_MCP_URL] = remote_url
-            cleaned[OPT_REMOTE_MCP_NAMESPACE] = (
-                str(cleaned.get(OPT_REMOTE_MCP_NAMESPACE, "remote") or "remote")
-                .strip()
-                .lower()
-                or "remote"
-            )
-        else:
-            cleaned.pop(OPT_REMOTE_MCP_URL, None)
-            cleaned.pop(OPT_REMOTE_MCP_NAMESPACE, None)
-        # Remote credentials are written directly to entry.data, never options.
-        cleaned.pop(OPT_REMOTE_MCP_BEARER_TOKEN, None)
-        cleaned.pop(OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN, None)
-        return cleaned
+        return normalize_remote_mcp_options(cleaned)
 
     async def _versions_hint(self, common: dict[str, str]) -> str:
         """Return a one-line component + server version summary for the form.
