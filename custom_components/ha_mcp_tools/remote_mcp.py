@@ -22,6 +22,8 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     DATA_REMOTE_MCP_BEARER_TOKEN,
+    OPT_CORE_MCP_ENTRY_ID,
+    OPT_CORE_MCP_NAMESPACE,
     OPT_REMOTE_MCP_BEARER_TOKEN,
     OPT_CORE_MCP_ENTRY_ID,
     OPT_CORE_MCP_NAMESPACE,
