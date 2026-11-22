@@ -96,7 +96,7 @@ from .embedded_worker_teardown import (
 from .loopback_url import derive_loopback_url
 from .purged_modules import release_purged_modules
 from .remote_mcp import (
-    register_remote_mcp_upstream_if_configured,
+    register_remote_mcp_if_configured,
     remote_mcp_config_snapshot,
 )
 from .server_credentials import (
@@ -253,29 +253,21 @@ class EmbeddedServerManager:
         options = entry.options
         self._port: int = int(options.get(OPT_SERVER_PORT, DEFAULT_SERVER_PORT))
         self._bind_host: str = str(options.get(OPT_BIND_HOST, DEFAULT_BIND_HOST))
-        # An explicit server_url override wins verbatim (the operator manages
-        # scheme/verification themselves via the settings UI). A stored value
-        # equal to DEFAULT_LOOPBACK_URL is treated as no-override: the options
-        # form used to pre-fill that constant as suggested_value, so existing
-        # entries carry it without the user ever having chosen it.
+        # Explicit server_url overrides are used verbatim; the form's old
+        # suggested DEFAULT_LOOPBACK_URL is treated as no override.
         _url_override = str(options.get(OPT_SERVER_URL) or "").rstrip("/")
         self._loopback_verify_ssl: bool | None = None
         if _url_override and _url_override != DEFAULT_LOOPBACK_URL:
             self._server_url: str = _url_override
         else:
             self._server_url, self._loopback_verify_ssl = derive_loopback_url(hass)
-        # An explicit pip-spec override (PR / pre-release testing) wins over the
-        # server requirement this component release pins in its manifest.
-        # DEFAULT_PIP_SPEC in the field means "no override" (the options flow
-        # also normalizes it away on save; this guard keeps legacy/direct
-        # entries correct too).
+        # Explicit PR/pre-release pip overrides win over the manifest pin;
+        # DEFAULT_PIP_SPEC means no override, including for legacy entries.
         raw_pip_spec = str(options.get(OPT_PIP_SPEC) or "").strip()
         self._pip_spec_override: str = (
             raw_pip_spec if raw_pip_spec and raw_pip_spec != DEFAULT_PIP_SPEC else ""
         )
-        # The ha-mcp requirement in this component release's manifest. Home
-        # Assistant installs it before setup, like any integration requirement;
-        # read in async_start (the loader lookup is async).
+        # HA installs the manifest's ha-mcp requirement before setup.
         self._paired_spec: str | None = None
         self._llm_api_enabled: bool = bool(
             options.get(OPT_ENABLE_LLM_API, DEFAULT_ENABLE_LLM_API)
@@ -285,9 +277,7 @@ class EmbeddedServerManager:
         self._secret_path: str = str(entry.data.get(DATA_SECRET_PATH, ""))
         self._remote_mcp_config = remote_mcp_config_snapshot(options, entry.data)
         self._config_dir: str = hass.config.path(SERVER_CONFIG_SUBDIR)
-        # Home Assistant's own configuration directory, captured here on the
-        # event loop: the dependency diagnosis scans custom_components/ from
-        # the WORKER thread, which must never touch hass.
+        # Capture on the event loop; the worker's dependency audit cannot touch hass.
         self._hass_config_dir: str = hass.config.config_dir
 
         # Worker-thread state. ``_loop`` and ``_stop_event`` are created in the
