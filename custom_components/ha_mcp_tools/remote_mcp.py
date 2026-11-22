@@ -25,8 +25,6 @@ from .const import (
     OPT_CORE_MCP_ENTRY_ID,
     OPT_CORE_MCP_NAMESPACE,
     OPT_REMOTE_MCP_BEARER_TOKEN,
-    OPT_CORE_MCP_ENTRY_ID,
-    OPT_CORE_MCP_NAMESPACE,
     OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN,
     OPT_REMOTE_MCP_NAMESPACE,
     OPT_REMOTE_MCP_URL,
@@ -169,9 +167,7 @@ def remote_mcp_config_snapshot(
         str(options.get(OPT_REMOTE_MCP_URL, "") or "").strip(),
         str(data.get(DATA_REMOTE_MCP_BEARER_TOKEN, "") or ""),
         str(options.get(OPT_CORE_MCP_ENTRY_ID, "") or "").strip(),
-        str(options.get(OPT_CORE_MCP_NAMESPACE, "remote") or "remote")
-        .strip()
-        .lower(),
+        str(options.get(OPT_CORE_MCP_NAMESPACE, "remote") or "remote").strip().lower(),
     )
 
 
