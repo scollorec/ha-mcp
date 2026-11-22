@@ -61,7 +61,7 @@ def _connection_record(entry: Any) -> dict[str, Any]:
     }
 
 
-def _do_mcp_connections(hass: HomeAssistant, params: dict[str, Any]) -> dict[str, Any]:
+def do_mcp_connections(hass: HomeAssistant, params: dict[str, Any]) -> dict[str, Any]:
     """List Core MCP config entries without exposing URLs or credentials."""
     entries = hass.config_entries.async_entries(_MCP_DOMAIN)
     return {"connections": [_connection_record(entry) for entry in entries]}
@@ -135,7 +135,7 @@ def _tool_record(tool: Any) -> dict[str, Any]:
     }
 
 
-async def _mcp_list_tools_prep(
+async def mcp_list_tools_prep(
     hass: HomeAssistant, msg: dict[str, Any]
 ) -> dict[str, Any]:
     """Refresh and serialize tools from an existing Core MCP connection."""
@@ -161,7 +161,7 @@ def _do_mcp_list_tools(
     return payload
 
 
-async def _mcp_call_tool_prep(
+async def mcp_call_tool_prep(
     hass: HomeAssistant, msg: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate and invoke one tool through Core's existing MCP tool wrapper."""
