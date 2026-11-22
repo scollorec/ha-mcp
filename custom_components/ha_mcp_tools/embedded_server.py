@@ -1497,7 +1497,7 @@ class EmbeddedServerManager:
         self._note_startup_phase("building the server")
         server = HomeAssistantSmartMCPServer()
 
-        register_remote_mcp_upstream_if_configured(server.mcp, self._remote_mcp_config)
+        register_remote_mcp_if_configured(server.mcp, self._remote_mcp_config)
 
         # Startup observability (no secrets): confirm the in-memory connection
         # channel actually reached the settings singleton — a sentinel here means
