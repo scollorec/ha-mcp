@@ -388,13 +388,6 @@ from .dashboards import (
     _do_dashboards,
 )
 from .logbook import _do_logbook_events, _logbook_events_prep
-from .mcp_bridge import (
-    _do_mcp_call_tool,
-    _do_mcp_connections,
-    _do_mcp_list_tools,
-    _mcp_call_tool_prep,
-    _mcp_list_tools_prep,
-)
 from .lookups import (
     _blueprint_get_prep,
     _do_blueprint_get,
@@ -404,6 +397,13 @@ from .lookups import (
     _do_exposure,
     _do_registry_lookup,
     do_device_get,
+)
+from .mcp_bridge import (
+    _do_mcp_call_tool,
+    _do_mcp_connections,
+    _do_mcp_list_tools,
+    _mcp_call_tool_prep,
+    _mcp_list_tools_prep,
 )
 from .oauth_callbacks import command_specs as _oauth_callback_specs
 from .overview import _do_overview, _do_states, _helpers_list_prep, do_helpers_list
