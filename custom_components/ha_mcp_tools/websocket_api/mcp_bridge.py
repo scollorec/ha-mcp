@@ -62,12 +62,7 @@ def _do_mcp_connections(
 ) -> dict[str, Any]:
     """List Core MCP config entries without exposing URLs or credentials."""
     entries = hass.config_entries.async_entries(_MCP_DOMAIN)
-    return {
-        "connections": [
-            _connection_record(entry)
-            for entry in entries
-        ]
-    }
+    return {"connections": [_connection_record(entry) for entry in entries]}
 
 
 def _get_loaded_connection(hass: HomeAssistant, entry_id: str) -> tuple[Any, Any]:
