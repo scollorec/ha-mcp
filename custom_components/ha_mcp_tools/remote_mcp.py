@@ -22,6 +22,8 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     DATA_REMOTE_MCP_BEARER_TOKEN,
+    OPT_CORE_MCP_ENTRY_ID,
+    OPT_CORE_MCP_NAMESPACE,
     OPT_REMOTE_MCP_BEARER_TOKEN,
     OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN,
     OPT_REMOTE_MCP_NAMESPACE,
@@ -156,14 +158,16 @@ def remote_mcp_form_errors(user_input: Mapping[str, Any]) -> dict[str, str]:
 
 def remote_mcp_config_snapshot(
     options: Mapping[str, Any], data: Mapping[str, Any]
-) -> tuple[str, str, str]:
-    """Copy settings and the secret off the HA event loop before worker startup."""
+) -> tuple[str, str, str, str, str]:
+    """Copy configured MCP selections and secrets before worker startup."""
     return (
         str(options.get(OPT_REMOTE_MCP_NAMESPACE, "remote") or "remote")
         .strip()
         .lower(),
         str(options.get(OPT_REMOTE_MCP_URL, "") or "").strip(),
         str(data.get(DATA_REMOTE_MCP_BEARER_TOKEN, "") or ""),
+        str(options.get(OPT_CORE_MCP_ENTRY_ID, "") or "").strip(),
+        str(options.get(OPT_CORE_MCP_NAMESPACE, "remote") or "remote").strip().lower(),
     )
 
 
@@ -214,20 +218,50 @@ def register_remote_mcp_upstream(
     mcp.add_provider(provider, namespace=namespace)
 
 
-def register_remote_mcp_if_configured(mcp: Any, config: tuple[str, str, str]) -> None:
-    """Register the optional upstream, isolating failures from HA-MCP startup."""
-    namespace, url, bearer_token = config
-    if not url:
+def register_remote_mcp_if_configured(
+    mcp: Any, config: tuple[str, str, str, str, str]
+) -> None:
+    """Register the configured direct and Home Assistant Core MCP providers."""
+    namespace, url, bearer_token, core_entry_id, core_namespace = config
+    if url:
+        try:
+            register_remote_mcp_upstream(
+                mcp, namespace=namespace, url=url, bearer_token=bearer_token
+            )
+        except Exception:
+            _LOGGER.exception(
+                "Could not register remote MCP upstream %r; "
+                "continuing with Home Assistant tools only",
+                namespace,
+            )
+        else:
+            _LOGGER.info("Registered remote MCP upstream under namespace %r", namespace)
+
+    if not core_entry_id:
         return
+
+    # Import the provider only on the embedded worker loop. The component's
+    # Home Assistant event-loop code never imports the ha-mcp server package.
+    from importlib import import_module
+
     try:
-        register_remote_mcp_upstream(
-            mcp, namespace=namespace, url=url, bearer_token=bearer_token
+        providers = import_module("ha_mcp.providers.home_assistant_core")
+    except ModuleNotFoundError as err:
+        if err.name != "ha_mcp.providers.home_assistant_core":
+            raise
+        _LOGGER.warning(
+            "The installed ha-mcp package does not include the "
+            "Home Assistant Core MCP provider; selected tools are unavailable"
+        )
+        return
+
+    try:
+        providers.register_home_assistant_core_mcp(
+            mcp,
+            entry_id=core_entry_id,
+            namespace=core_namespace,
         )
     except Exception:
         _LOGGER.exception(
-            "Could not register remote MCP upstream %r; "
-            "continuing with Home Assistant tools only",
-            namespace,
+            "Could not register the selected Home Assistant Core MCP entry"
         )
-    else:
-        _LOGGER.info("Registered remote MCP upstream under namespace %r", namespace)

@@ -40,6 +40,18 @@ from ._component_core import ws_call, ws_result
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 
+# These bridge commands are admin-only too, but the list/call commands need a
+# configured Core MCP entry and are tested separately from the generic surface.
+_MCP_BRIDGE_COMMANDS: dict[str, dict[str, Any]] = {
+    c.WS_MCP_CONNECTIONS: {},
+    c.WS_MCP_LIST_TOOLS: {"entry_id": "mcp-entry"},
+    c.WS_MCP_CALL_TOOL: {
+        "entry_id": "mcp-entry",
+        "tool_name": "system_info",
+        "tool_args": {},
+    },
+}
+
 # The commands this file gates, each with the fields its schema requires.
 _GATED_COMMANDS: dict[str, dict[str, Any]] = {
     c.WS_INFO: {},
@@ -108,6 +120,7 @@ async def test_every_command_is_registered_and_config_get_is_not(
 
     assert registered == {
         *_GATED_COMMANDS,
+        *_MCP_BRIDGE_COMMANDS,
         c.WS_DASHBOARDS,
         c.WS_DASHBOARD_EDIT,
         c.WS_SERVICES_LIST,
@@ -142,7 +155,10 @@ async def test_every_command_is_registered_and_config_get_is_not(
     assert "ha_mcp_tools/config_get" not in registered
 
 
-@pytest.mark.parametrize(("command", "params"), list(_GATED_COMMANDS.items()))
+@pytest.mark.parametrize(
+    ("command", "params"),
+    list({**_GATED_COMMANDS, **_MCP_BRIDGE_COMMANDS}.items()),
+)
 async def test_a_non_admin_is_refused_every_command(
     component_ws_read_only: MockHAClientWebSocket,
     command: str,

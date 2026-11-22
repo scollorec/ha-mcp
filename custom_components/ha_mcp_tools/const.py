@@ -299,6 +299,8 @@ OPT_REMOTE_MCP_NAMESPACE = "remote_mcp_namespace"
 OPT_REMOTE_MCP_URL = "remote_mcp_url"
 OPT_REMOTE_MCP_BEARER_TOKEN = "remote_mcp_bearer_token"
 OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN = "remote_mcp_clear_bearer_token"
+OPT_CORE_MCP_ENTRY_ID = "core_mcp_entry_id"
+OPT_CORE_MCP_NAMESPACE = "core_mcp_namespace"
 # Connect-URL surface + secret management (owner request, parity with the
 # webhook-proxy app's external-URL option and the add-on's secret-path
 # override). All optional; empty string = automatic/keep-current.

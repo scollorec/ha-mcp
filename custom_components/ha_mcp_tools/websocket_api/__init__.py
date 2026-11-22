@@ -398,6 +398,13 @@ from .lookups import (
     _do_registry_lookup,
     do_device_get,
 )
+from .mcp_bridge import (
+    _do_mcp_call_tool,
+    _do_mcp_list_tools,
+    do_mcp_connections,
+    mcp_call_tool_prep,
+    mcp_list_tools_prep,
+)
 from .oauth_callbacks import command_specs as _oauth_callback_specs
 from .overview import _do_overview, _do_states, _helpers_list_prep, do_helpers_list
 from .registries import _do_registries, _do_registry_fields
@@ -417,6 +424,9 @@ from .schemas import (
     _helpers_list_schema,
     _info_schema,
     _logbook_events_schema,
+    _mcp_call_tool_schema,
+    _mcp_connections_schema,
+    _mcp_list_tools_schema,
     _overview_schema,
     _reference_data_schema,
     _registries_schema,
@@ -503,6 +513,9 @@ def _command_specs() -> list[tuple[dict[Any, Any], Any, Any]]:
     """
     return [
         (_info_schema(), lambda hass, msg: do_info(hass), None),
+        (_mcp_connections_schema(), do_mcp_connections, None),
+        (_mcp_list_tools_schema(), _do_mcp_list_tools, mcp_list_tools_prep),
+        (_mcp_call_tool_schema(), _do_mcp_call_tool, mcp_call_tool_prep),
         (_search_schema(), do_search, _search_prep),
         (_overview_schema(), _do_overview, None),
         (_helpers_list_schema(), do_helpers_list, _helpers_list_prep),

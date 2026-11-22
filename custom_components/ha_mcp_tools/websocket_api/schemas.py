@@ -30,6 +30,9 @@ from .constants import (
     WS_HELPERS_LIST,
     WS_INFO,
     WS_LOGBOOK_EVENTS,
+    WS_MCP_CALL_TOOL,
+    WS_MCP_CONNECTIONS,
+    WS_MCP_LIST_TOOLS,
     WS_OVERVIEW,
     WS_REFERENCE_DATA,
     WS_REGISTRIES,
@@ -49,6 +52,29 @@ from .trace_context import TRACE_DOMAINS
 
 def _info_schema() -> dict[Any, Any]:
     return {vol.Required("type"): WS_INFO}
+
+
+def _mcp_connections_schema() -> dict[Any, Any]:
+    """List configured Home Assistant Core MCP connections."""
+    return {vol.Required("type"): WS_MCP_CONNECTIONS}
+
+
+def _mcp_list_tools_schema() -> dict[Any, Any]:
+    """List the tools from one existing Core MCP connection."""
+    return {
+        vol.Required("type"): WS_MCP_LIST_TOOLS,
+        vol.Required("entry_id"): str,
+    }
+
+
+def _mcp_call_tool_schema() -> dict[Any, Any]:
+    """Invoke a tool through one existing Core MCP connection."""
+    return {
+        vol.Required("type"): WS_MCP_CALL_TOOL,
+        vol.Required("entry_id"): str,
+        vol.Required("tool_name"): str,
+        vol.Optional("tool_args", default=dict): dict,
+    }
 
 
 def _trace_context_schema() -> dict[Any, Any]:

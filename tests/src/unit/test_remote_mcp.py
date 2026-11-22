@@ -6,11 +6,18 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from custom_components.ha_mcp_tools.const import (
+    OPT_CORE_MCP_ENTRY_ID,
+    OPT_CORE_MCP_NAMESPACE,
+)
 from custom_components.ha_mcp_tools.remote_mcp import (
+    register_remote_mcp_if_configured,
     register_remote_mcp_upstream,
     remote_mcp_config_error,
+    remote_mcp_config_snapshot,
 )
 from ha_mcp._vendor.fastmcp.server.providers.proxy import ProxyProvider
+from ha_mcp.providers.home_assistant_core import HomeAssistantCoreMCPProvider
 
 ENDPOINT = "http://192.168.1.55:8765/mcp"
 
@@ -69,3 +76,31 @@ def test_provider_is_registered_under_namespace_and_uses_explicit_auth_only() ->
         assert transport.url == ENDPOINT
         assert transport.headers == {"Authorization": "Bearer upstream-secret"}
         assert proxy_client.call_args.kwargs == {"forward_incoming_headers": False}
+
+
+def test_core_mcp_selection_is_included_in_worker_snapshot() -> None:
+    """Pass the Core config-entry identity to the embedded worker, not its URL."""
+    config = remote_mcp_config_snapshot(
+        {
+            OPT_CORE_MCP_ENTRY_ID: "fedora-entry",
+            OPT_CORE_MCP_NAMESPACE: "Fedora_Workstation",
+        },
+        {},
+    )
+
+    assert config == ("remote", "", "", "fedora-entry", "fedora_workstation")
+
+
+def test_selected_core_mcp_entry_is_registered_without_a_second_url() -> None:
+    """The worker setup attaches the provider using only the existing entry ID."""
+    mcp = Mock()
+
+    register_remote_mcp_if_configured(
+        mcp,
+        ("remote", "", "", "fedora-entry", "fedora_workstation"),
+    )
+
+    mcp.add_provider.assert_called_once()
+    provider = mcp.add_provider.call_args.args[0]
+    assert isinstance(provider, HomeAssistantCoreMCPProvider)
+    assert mcp.add_provider.call_args.kwargs == {"namespace": "fedora_workstation"}

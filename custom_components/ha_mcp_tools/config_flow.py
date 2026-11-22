@@ -1,8 +1,6 @@
 """Config + options flow for the HA-MCP custom component.
 
-One config flow serves two entry types under the shared domain, chosen from a
-menu on the first step:
-
+One config flow serves two entry types under the shared domain, chosen from a menu on the first step:
 * ``tools`` — the privileged file / YAML services (the original component).
   A single confirm step creates the entry. Single-instance, keyed on
   ``DOMAIN``.
@@ -103,6 +101,11 @@ from .const import (
     WEBHOOK_AUTH_HA,
     WEBHOOK_AUTH_LEGACY,
     WEBHOOK_AUTH_NONE,
+)
+from .core_mcp_options import (
+    core_mcp_form_errors,
+    core_mcp_option_fields,
+    normalize_core_mcp_options,
 )
 from .oauth_redirect_allowlist import (
     MAX_OAUTH_CALLBACKS,
@@ -440,6 +443,7 @@ class HaMcpServerOptionsFlow(OptionsFlow):
         if user_input is not None:
             errors = self._connect_path_override_errors(user_input)
             errors.update(remote_mcp_form_errors(user_input))
+            errors.update(core_mcp_form_errors(self.hass, user_input))
             entries, invalid = normalize_allowlist(
                 user_input.get(OPT_OAUTH_REDIRECT_ALLOWLIST) or []
             )
@@ -544,6 +548,7 @@ class HaMcpServerOptionsFlow(OptionsFlow):
                     },
                 ): str,
                 **remote_mcp_option_fields(suggested_values, form_values),
+                **core_mcp_option_fields(self.hass, suggested_values, form_values),
                 vol.Required(
                     OPT_ENABLE_WEBHOOK,
                     default=bool(form_values.get(OPT_ENABLE_WEBHOOK, True)),
@@ -770,7 +775,8 @@ class HaMcpServerOptionsFlow(OptionsFlow):
             cleaned[OPT_SERVER_URL] = server_url
         else:
             cleaned.pop(OPT_SERVER_URL, None)
-        return normalize_remote_mcp_options(cleaned)
+        cleaned = normalize_remote_mcp_options(cleaned)
+        return normalize_core_mcp_options(cleaned)
 
     async def _versions_hint(self, common: dict[str, str]) -> str:
         """Return a one-line component + server version summary for the form.

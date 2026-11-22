@@ -67,6 +67,9 @@ __all__ = [
     "WS_HELPERS_LIST",
     "WS_INFO",
     "WS_LOGBOOK_EVENTS",
+    "WS_MCP_CALL_TOOL",
+    "WS_MCP_CONNECTIONS",
+    "WS_MCP_LIST_TOOLS",
     "WS_OAUTH_CALLBACKS",
     "WS_OAUTH_CALLBACKS_UPDATE",
     "WS_OVERVIEW",
@@ -109,6 +112,9 @@ WS_SERVICES_LIST = f"{WS_API_PREFIX}/services_list"
 WS_REFERENCE_DATA = f"{WS_API_PREFIX}/reference_data"
 WS_LOGBOOK_EVENTS = f"{WS_API_PREFIX}/logbook_events"
 WS_TRACE_CONTEXT = f"{WS_API_PREFIX}/trace_context"
+WS_MCP_CONNECTIONS = f"{WS_API_PREFIX}/mcp_connections"
+WS_MCP_LIST_TOOLS = f"{WS_API_PREFIX}/mcp_list_tools"
+WS_MCP_CALL_TOOL = f"{WS_API_PREFIX}/mcp_call_tool"
 WS_SERVER_ENTRY = f"{WS_API_PREFIX}/server_entry"
 WS_SERVER_ENTRY_UPDATE = f"{WS_API_PREFIX}/server_entry_update"
 WS_CALL_EVENT = f"{WS_API_PREFIX}/call_event"
@@ -139,6 +145,8 @@ CAPABILITIES: list[str] = [
     # registry row) and search matches on it.
     "entity_composed_name",
     "overview",
+    # Admin-gated bridge to existing Home Assistant Core MCP config entries.
+    "mcp_bridge",
     "helpers_list",
     "states",
     "blueprint_get",

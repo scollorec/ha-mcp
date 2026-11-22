@@ -37,6 +37,8 @@ from custom_components.ha_mcp_tools.const import (
     OPT_ACCESS_OFF_AFTER_RESTART,
     OPT_ADMIN_TOKEN_REPLACEMENT,
     OPT_BIND_HOST,
+    OPT_CORE_MCP_ENTRY_ID,
+    OPT_CORE_MCP_NAMESPACE,
     OPT_ENABLE_LLM_API,
     OPT_ENABLE_SIDEBAR_PANEL,
     OPT_ENABLE_STARTUP_NOTIFICATION,
@@ -349,6 +351,8 @@ async def test_form_prefills_every_field_from_saved_options(
         OPT_OAUTH_ALLOW_ANY_CALLBACK: False,
         OPT_REMOTE_MCP_BEARER_TOKEN: "",
         OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN: False,
+        OPT_CORE_MCP_ENTRY_ID: "",
+        OPT_CORE_MCP_NAMESPACE: "remote",
     }
     never_prefilled = (
         OPT_ADMIN_TOKEN_REPLACEMENT,
