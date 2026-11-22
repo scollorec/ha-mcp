@@ -126,5 +126,3 @@ def normalize_core_mcp_options(cleaned: dict[str, Any]) -> dict[str, Any]:
     cleaned[OPT_CORE_MCP_ENTRY_ID] = entry_id
     cleaned[OPT_CORE_MCP_NAMESPACE] = namespace.strip().lower()
     return cleaned
-
-
