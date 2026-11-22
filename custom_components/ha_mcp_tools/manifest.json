@@ -35,5 +35,5 @@
         "voluptuous-openapi>=0.4.1",
         "ha-mcp==9.2.0"
     ],
-    "version": "9.2.1-beta.1"
+    "version": "9.2.0"
 }
