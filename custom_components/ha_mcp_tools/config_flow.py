@@ -116,7 +116,7 @@ from .oauth_redirect_allowlist import (
     normalize_allowlist,
     stored_allowlist,
 )
-from .remote_mcp import remote_mcp_form_error
+from .remote_mcp import remote_mcp_form_errors
 from .server_pin import server_pins
 from .spec_dist import version_dist
 
@@ -439,8 +439,7 @@ class HaMcpServerOptionsFlow(OptionsFlow):
         invalid: list[str] = []
         if user_input is not None:
             errors = self._connect_path_override_errors(user_input)
-            if remote_error := remote_mcp_form_error(user_input):
-                errors[remote_error[0]] = remote_error[1]
+            errors.update(remote_mcp_form_errors(user_input))
             entries, invalid = normalize_allowlist(
                 user_input.get(OPT_OAUTH_REDIRECT_ALLOWLIST) or []
             )
