@@ -292,6 +292,14 @@ OPT_OAUTH_CLIENT_SECRET = "oauth_client_secret_override"
 OPT_OAUTH_REGENERATE = "oauth_regenerate"
 OPT_PIP_SPEC = "pip_spec"
 OPT_SERVER_URL = "server_url"
+# Optional generic remote MCP upstream, proxied into the embedded server under
+# the configured namespace (e.g. fedora_<tool>). The bearer token is stored in
+# entry.data, never in the publicly readable options mapping.
+OPT_REMOTE_MCP_NAMESPACE = "remote_mcp_namespace"
+OPT_REMOTE_MCP_URL = "remote_mcp_url"
+OPT_REMOTE_MCP_BEARER_TOKEN = "remote_mcp_bearer_token"
+OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN = "remote_mcp_clear_bearer_token"
+DATA_REMOTE_MCP_BEARER_TOKEN = "remote_mcp_bearer_token"
 # Connect-URL surface + secret management (owner request, parity with the
 # webhook-proxy app's external-URL option and the add-on's secret-path
 # override). All optional; empty string = automatic/keep-current.
