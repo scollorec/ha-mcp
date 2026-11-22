@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -11,7 +10,7 @@ from custom_components.ha_mcp_tools.remote_mcp import (
     register_remote_mcp_upstream,
     remote_mcp_config_error,
 )
-from ha_mcp._vendor.fastmcp.server.providers.proxy import ProxyClient, ProxyProvider
+from ha_mcp._vendor.fastmcp.server.providers.proxy import ProxyProvider
 
 ENDPOINT = "http://192.168.1.55:8765/mcp"
 
@@ -49,20 +48,24 @@ def test_blank_endpoint_disables_upstream() -> None:
 def test_provider_is_registered_under_namespace_and_uses_explicit_auth_only() -> None:
     mcp = Mock()
 
-    register_remote_mcp_upstream(
-        mcp,
-        namespace="fedora",
-        url=ENDPOINT,
-        bearer_token="upstream-secret",
-    )
+    with patch(
+        "ha_mcp._vendor.fastmcp.server.providers.proxy.ProxyClient"
+    ) as proxy_client:
+        register_remote_mcp_upstream(
+            mcp,
+            namespace="fedora",
+            url=ENDPOINT,
+            bearer_token="upstream-secret",
+        )
 
-    mcp.add_provider.assert_called_once()
-    provider = mcp.add_provider.call_args.args[0]
-    assert isinstance(provider, ProxyProvider)
-    assert mcp.add_provider.call_args.kwargs == {"namespace": "fedora"}
+        mcp.add_provider.assert_called_once()
+        provider = mcp.add_provider.call_args.args[0]
+        assert isinstance(provider, ProxyProvider)
+        assert mcp.add_provider.call_args.kwargs == {"namespace": "fedora"}
 
-    # Constructing the proxy client is local-only; it does not contact the URL.
-    client = cast(ProxyClient[Any], provider.client_factory())
-    assert client.transport.url == ENDPOINT
-    assert client.transport.headers == {"Authorization": "Bearer upstream-secret"}
-    assert client._transport_options.forward_incoming_headers is False
+        # Building the upstream client is local-only; it makes no HTTP request.
+        provider.client_factory()
+        transport = proxy_client.call_args.args[0]
+        assert transport.url == ENDPOINT
+        assert transport.headers == {"Authorization": "Bearer upstream-secret"}
+        assert proxy_client.call_args.kwargs == {"forward_incoming_headers": False}
