@@ -18,6 +18,7 @@ from ha_mcp._vendor.fastmcp.tools.base import Tool, ToolResult
 from ha_mcp._vendor.fastmcp.utilities.tasks import TaskConfig
 from ha_mcp._vendor.fastmcp.utilities.versions import VersionSpec
 from ha_mcp.client.websocket_client import WebSocketManager
+from ha_mcp.errors import TOOL_ERROR_LOG_LEVEL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +27,11 @@ _MCP_CALL_TOOL_COMMAND = "ha_mcp_tools/mcp_call_tool"
 _BRIDGE_COMMAND_TIMEOUT_SECONDS = 45.0
 _TOOL_CACHE_TTL_SECONDS = 15.0
 _NAMESPACE_RE = re.compile(r"[a-z][a-z0-9_]{0,31}")
+
+
+def _tool_error(message: str) -> ToolError:
+    """Create a caller-facing error that FastMCP logs below ERROR."""
+    return ToolError(message, log_level=TOOL_ERROR_LOG_LEVEL)
 
 
 class HomeAssistantCoreMCPTool(Tool):
@@ -62,22 +68,22 @@ class HomeAssistantCoreMCPTool(Tool):
                 self._backend_name,
                 exc_info=True,
             )
-            raise ToolError(
+            raise _tool_error(
                 f"Home Assistant Core MCP could not invoke {self._backend_name!r}"
             ) from err
 
         bridge_result = response.get("result")
         if not isinstance(bridge_result, Mapping):
-            raise ToolError("Home Assistant Core MCP returned an invalid call result")
+            raise _tool_error("Home Assistant Core MCP returned an invalid call result")
 
         raw_result = bridge_result.get("result")
         if not isinstance(raw_result, Mapping):
-            raise ToolError("Home Assistant Core MCP returned an invalid tool payload")
+            raise _tool_error("Home Assistant Core MCP returned an invalid tool payload")
 
         try:
             call_result = mcp_types.CallToolResult.model_validate(dict(raw_result))
         except Exception as err:
-            raise ToolError(
+            raise _tool_error(
                 "Home Assistant Core MCP returned an unsupported tool result"
             ) from err
 
@@ -118,35 +124,35 @@ class HomeAssistantCoreMCPProvider(Provider):
                 self.entry_id,
                 exc_info=True,
             )
-            raise ToolError(
+            raise _tool_error(
                 "Home Assistant Core MCP tool discovery is unavailable"
             ) from err
 
         payload = response.get("result")
         if not isinstance(payload, Mapping):
-            raise ToolError(
+            raise _tool_error(
                 "Home Assistant Core MCP returned an invalid tool catalogue"
             )
 
         raw_tools = payload.get("tools")
         if not isinstance(raw_tools, list):
-            raise ToolError("Home Assistant Core MCP returned no valid tool list")
+            raise _tool_error("Home Assistant Core MCP returned no valid tool list")
 
         tools: list[Tool] = []
         for record in raw_tools:
             if not isinstance(record, Mapping):
-                raise ToolError(
+                raise _tool_error(
                     "Home Assistant Core MCP returned an invalid tool record"
                 )
 
             name = record.get("name")
             input_schema = record.get("input_schema")
             if not isinstance(name, str) or not name:
-                raise ToolError(
+                raise _tool_error(
                     "Home Assistant Core MCP returned a tool without a name"
                 )
             if not isinstance(input_schema, dict):
-                raise ToolError(
+                raise _tool_error(
                     f"Home Assistant Core MCP returned an invalid schema for {name!r}"
                 )
 
@@ -166,7 +172,7 @@ class HomeAssistantCoreMCPProvider(Provider):
                     )
                 )
             except Exception as err:
-                raise ToolError(
+                raise _tool_error(
                     f"Home Assistant Core MCP returned invalid metadata for {name!r}"
                 ) from err
 
