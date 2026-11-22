@@ -50,9 +50,7 @@ def core_mcp_option_fields(
             )
         )
 
-    selected_entry_id = str(
-        form_values.get(OPT_CORE_MCP_ENTRY_ID, "") or ""
-    ).strip()
+    selected_entry_id = str(form_values.get(OPT_CORE_MCP_ENTRY_ID, "") or "").strip()
     if selected_entry_id and selected_entry_id not in known_ids:
         options.append(
             SelectOptionDict(
@@ -70,9 +68,14 @@ def core_mcp_option_fields(
         if selected_entry is not None
         else "remote"
     )
-    namespace = str(
-        form_values.get(OPT_CORE_MCP_NAMESPACE, default_namespace) or default_namespace
-    ).strip().lower()
+    namespace = (
+        str(
+            form_values.get(OPT_CORE_MCP_NAMESPACE, default_namespace)
+            or default_namespace
+        )
+        .strip()
+        .lower()
+    )
 
     return {
         vol.Optional(
@@ -129,7 +132,5 @@ def core_mcp_config_snapshot(options: Mapping[str, Any]) -> tuple[str, str]:
     """Copy the non-secret Core MCP selection before worker startup."""
     return (
         str(options.get(OPT_CORE_MCP_ENTRY_ID, "") or "").strip(),
-        str(options.get(OPT_CORE_MCP_NAMESPACE, "remote") or "remote")
-        .strip()
-        .lower(),
+        str(options.get(OPT_CORE_MCP_NAMESPACE, "remote") or "remote").strip().lower(),
     )
