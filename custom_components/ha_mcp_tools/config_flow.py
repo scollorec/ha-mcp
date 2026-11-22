@@ -442,7 +442,8 @@ class HaMcpServerOptionsFlow(OptionsFlow):
             remote_error = remote_mcp_config_error(
                 str(user_input.get(OPT_REMOTE_MCP_NAMESPACE, "remote") or "remote")
                 .strip()
-                .lower(),
+                .lower()
+                or "remote",
                 str(user_input.get(OPT_REMOTE_MCP_URL, "") or "").strip(),
             )
             if remote_error:
