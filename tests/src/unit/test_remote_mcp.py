@@ -78,7 +78,6 @@ def test_provider_is_registered_under_namespace_and_uses_explicit_auth_only() ->
         assert proxy_client.call_args.kwargs == {"forward_incoming_headers": False}
 
 
-
 def test_core_mcp_selection_is_included_in_worker_snapshot() -> None:
     """Pass the Core config-entry identity to the embedded worker, not its URL."""
     config = remote_mcp_config_snapshot(
