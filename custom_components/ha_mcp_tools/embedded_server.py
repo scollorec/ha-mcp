@@ -75,7 +75,6 @@ from .const import (
     SERVER_CONFIG_SUBDIR,
     SERVER_KEEPALIVE_SECONDS,
 )
-from .core_mcp_options import core_mcp_config_snapshot
 from .dependency_diagnostics import (
     DependencyViolation,
     PinningIntegration,
@@ -243,37 +242,6 @@ def _install_log_filters_if_available() -> None:
         )
 
 
-def _register_core_mcp_provider(mcp: Any, config: tuple[str, str]) -> None:
-    """Best-effort registration of the selected existing Core MCP connection."""
-    entry_id, namespace = config
-    if not entry_id:
-        return
-
-    try:
-        from ha_mcp.providers.home_assistant_core import (
-            register_home_assistant_core_mcp,
-        )
-    except ModuleNotFoundError as err:
-        if err.name != "ha_mcp.providers.home_assistant_core":
-            raise
-        _LOGGER.warning(
-            "The installed ha-mcp package does not include the "
-            "Home Assistant Core MCP provider; selected tools are unavailable"
-        )
-        return
-
-    try:
-        register_home_assistant_core_mcp(
-            mcp,
-            entry_id=entry_id,
-            namespace=namespace,
-        )
-    except Exception:
-        _LOGGER.exception(
-            "Could not register the selected Home Assistant Core MCP entry"
-        )
-
-
 class EmbeddedServerManager:
     """Manage the lifecycle of the in-process ha-mcp server for one config entry."""
 
@@ -308,7 +276,6 @@ class EmbeddedServerManager:
         self._pip_spec: str = self._resolve_pip_spec()
         self._secret_path: str = str(entry.data.get(DATA_SECRET_PATH, ""))
         self._remote_mcp_config = remote_mcp_config_snapshot(options, entry.data)
-        self._core_mcp_config = core_mcp_config_snapshot(options)
         self._config_dir: str = hass.config.path(SERVER_CONFIG_SUBDIR)
         # Capture on the event loop; the worker's dependency audit cannot touch hass.
         self._hass_config_dir: str = hass.config.config_dir
@@ -1531,7 +1498,6 @@ class EmbeddedServerManager:
         server = HomeAssistantSmartMCPServer()
 
         register_remote_mcp_if_configured(server.mcp, self._remote_mcp_config)
-        _register_core_mcp_provider(server.mcp, self._core_mcp_config)
 
         # Startup observability (no secrets): confirm the in-memory connection
         # channel actually reached the settings singleton — a sentinel here means
