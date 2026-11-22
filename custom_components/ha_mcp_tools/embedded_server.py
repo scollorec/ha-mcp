@@ -57,7 +57,6 @@ from packaging.version import InvalidVersion, Version
 from .const import (
     DATA_LAST_PIP_SPEC,
     DATA_REINSTALL_REQUESTED,
-    DATA_REMOTE_MCP_BEARER_TOKEN,
     DATA_SECRET_PATH,
     DEFAULT_BIND_HOST,
     DEFAULT_ENABLE_LLM_API,
@@ -71,8 +70,6 @@ from .const import (
     OPT_BIND_HOST,
     OPT_ENABLE_LLM_API,
     OPT_PIP_SPEC,
-    OPT_REMOTE_MCP_NAMESPACE,
-    OPT_REMOTE_MCP_URL,
     OPT_SERVER_PORT,
     OPT_SERVER_URL,
     SERVER_CONFIG_SUBDIR,
@@ -98,6 +95,10 @@ from .embedded_worker_teardown import (
 )
 from .loopback_url import derive_loopback_url
 from .purged_modules import release_purged_modules
+from .remote_mcp import (
+    register_remote_mcp_upstream_if_configured,
+    remote_mcp_config_snapshot,
+)
 from .server_credentials import (
     CredentialNeeded,
     async_release_credentials,
@@ -282,17 +283,7 @@ class EmbeddedServerManager:
         # Provisional until async_start reads the manifest pin.
         self._pip_spec: str = self._resolve_pip_spec()
         self._secret_path: str = str(entry.data.get(DATA_SECRET_PATH, ""))
-        # Snapshot the generic optional upstream config before entering the
-        # worker thread. The bearer token stays in memory and is never logged.
-        self._remote_mcp_namespace: str = str(
-            options.get(OPT_REMOTE_MCP_NAMESPACE, "remote") or "remote"
-        ).strip().lower()
-        self._remote_mcp_url: str = str(
-            options.get(OPT_REMOTE_MCP_URL, "") or ""
-        ).strip()
-        self._remote_mcp_bearer_token: str = str(
-            entry.data.get(DATA_REMOTE_MCP_BEARER_TOKEN, "") or ""
-        )
+        self._remote_mcp_config = remote_mcp_config_snapshot(options, entry.data)
         self._config_dir: str = hass.config.path(SERVER_CONFIG_SUBDIR)
         # Home Assistant's own configuration directory, captured here on the
         # event loop: the dependency diagnosis scans custom_components/ from
@@ -1516,30 +1507,7 @@ class EmbeddedServerManager:
         self._note_startup_phase("building the server")
         server = HomeAssistantSmartMCPServer()
 
-        # Optional MCP-to-MCP bridge. Registration is lazy and does not contact
-        # the upstream during HA-MCP startup; failures here are isolated so the
-        # Home Assistant tools remain available if a remote server is offline.
-        if self._remote_mcp_url:
-            try:
-                from .remote_mcp import register_remote_mcp_upstream
-
-                register_remote_mcp_upstream(
-                    server.mcp,
-                    namespace=self._remote_mcp_namespace,
-                    url=self._remote_mcp_url,
-                    bearer_token=self._remote_mcp_bearer_token,
-                )
-            except Exception:
-                _LOGGER.exception(
-                    "Could not register remote MCP upstream %r; "
-                    "continuing with Home Assistant tools only",
-                    self._remote_mcp_namespace,
-                )
-            else:
-                _LOGGER.info(
-                    "Registered remote MCP upstream under namespace %r",
-                    self._remote_mcp_namespace,
-                )
+        register_remote_mcp_upstream_if_configured(server.mcp, self._remote_mcp_config)
 
         # Startup observability (no secrets): confirm the in-memory connection
         # channel actually reached the settings singleton — a sentinel here means
