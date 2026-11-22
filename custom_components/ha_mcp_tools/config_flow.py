@@ -81,8 +81,6 @@ from .const import (
     OPT_ACCESS_OFF_AFTER_RESTART,
     OPT_ADMIN_TOKEN_REPLACEMENT,
     OPT_BIND_HOST,
-    OPT_CORE_MCP_ENTRY_ID,
-    OPT_CORE_MCP_NAMESPACE,
     OPT_ENABLE_LLM_API,
     OPT_ENABLE_SIDEBAR_PANEL,
     OPT_ENABLE_STARTUP_NOTIFICATION,
@@ -113,17 +111,17 @@ from .oauth_redirect_allowlist import (
     normalize_allowlist,
     stored_allowlist,
 )
-from .remote_mcp import (
-    adopt_remote_mcp_token,
-    normalize_remote_mcp_options,
-    remote_mcp_form_errors,
-    remote_mcp_option_fields,
-)
 from .core_mcp_options import (
     core_mcp_config_snapshot,
     core_mcp_form_errors,
     core_mcp_option_fields,
     normalize_core_mcp_options,
+)
+from .remote_mcp import (
+    adopt_remote_mcp_token,
+    normalize_remote_mcp_options,
+    remote_mcp_form_errors,
+    remote_mcp_option_fields,
 )
 from .server_pin import server_pins
 from .spec_dist import version_dist
