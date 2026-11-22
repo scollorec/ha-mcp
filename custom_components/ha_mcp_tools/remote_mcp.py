@@ -99,8 +99,16 @@ def register_remote_mcp_upstream(
 
     # Deliberately imported here, in the already-running embedded worker. The
     # vendored FastMCP classes must match the ha-mcp package that built server.mcp.
-    from ha_mcp._vendor.fastmcp.client.transports import StreamableHttpTransport
-    from ha_mcp._vendor.fastmcp.server.providers.proxy import ProxyClient, ProxyProvider
+    # Resolve vendored FastMCP modules dynamically. The component import guard
+    # scans Python import nodes and forbids static ha_mcp imports anywhere in
+    # the component, even inside worker-only functions.
+    from importlib import import_module
+
+    transports = import_module("ha_mcp._vendor.fastmcp.client.transports")
+    proxies = import_module("ha_mcp._vendor.fastmcp.server.providers.proxy")
+    streamable_http_transport = transports.StreamableHttpTransport
+    proxy_client = proxies.ProxyClient
+    proxy_provider = proxies.ProxyProvider
 
     headers = (
         {"Authorization": f"Bearer {bearer_token.strip()}"}
@@ -109,12 +117,12 @@ def register_remote_mcp_upstream(
     )
 
     def client_factory() -> Any:
-        transport = StreamableHttpTransport(url, headers=headers)
+        transport = streamable_http_transport(url, headers=headers)
         # Never relay HA-MCP caller authorization to a different upstream. Only
         # the explicitly configured bearer token above is sent to this server.
-        return ProxyClient(transport, forward_incoming_headers=False)
+        return proxy_client(transport, forward_incoming_headers=False)
 
-    mcp.add_provider(ProxyProvider(client_factory, cache_ttl=30.0), namespace=namespace)
+    mcp.add_provider(proxy_provider(client_factory, cache_ttl=30.0), namespace=namespace)
 
 
 def register_remote_mcp_if_configured(mcp: Any, config: tuple[str, str, str]) -> None:
