@@ -205,6 +205,35 @@ async def test_remote_mcp_token_can_be_cleared(
     assert DATA_REMOTE_MCP_BEARER_TOKEN not in entry.data
 
 
+async def test_configuring_remote_mcp_upstream_restarts_the_server(
+    hass: HomeAssistant, server: SimpleNamespace
+) -> None:
+    entry = await _loaded_entry(hass, server, **{DATA_WEBHOOK_ID: WEBHOOK_ID})
+    started = server.bring_up.await_count
+
+    await _save(
+        hass,
+        entry,
+        {OPT_REMOTE_MCP_NAMESPACE: "fedora", OPT_REMOTE_MCP_URL: REMOTE_MCP_URL},
+    )
+    await hass.async_block_till_done()
+
+    assert server.bring_up.await_count == started + 1
+
+
+async def test_remote_mcp_token_only_save_restarts_the_server(
+    hass: HomeAssistant, server: SimpleNamespace
+) -> None:
+    entry = await _loaded_entry(hass, server, **{DATA_WEBHOOK_ID: WEBHOOK_ID})
+    started = server.bring_up.await_count
+
+    await _save(hass, entry, {OPT_REMOTE_MCP_BEARER_TOKEN: "upstream-secret"})
+    await hass.async_block_till_done()
+
+    assert entry.data[DATA_REMOTE_MCP_BEARER_TOKEN] == "upstream-secret"
+    assert server.bring_up.await_count == started + 1
+
+
 async def test_invalid_remote_mcp_namespace_is_rejected(
     hass: HomeAssistant,
 ) -> None:
