@@ -491,7 +491,9 @@ class HaMcpServerOptionsFlow(OptionsFlow):
                 )
                 if remote_token or clear_remote_token:
                     self._adopt_remote_mcp_token(
-                        remote_token if remote_token else None, data
+                        remote_token if remote_token else None,
+                        data,
+                        schedule_reload=credential is None,
                     )
                 return self.async_create_entry(title="", data=data)
 
@@ -747,7 +749,11 @@ class HaMcpServerOptionsFlow(OptionsFlow):
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
 
     def _adopt_remote_mcp_token(
-        self, token: str | None, options: Mapping[str, Any]
+        self,
+        token: str | None,
+        options: Mapping[str, Any],
+        *,
+        schedule_reload: bool = True,
     ) -> None:
         """Keep the upstream bearer token out of entry.options and forms."""
         entry = self.config_entry
@@ -762,7 +768,9 @@ class HaMcpServerOptionsFlow(OptionsFlow):
         # A token-only save has no options delta to trigger the normal listener.
         from .embedded_entry import _reload_relevant
 
-        if _reload_relevant(options) == _reload_relevant(entry.options):
+        if schedule_reload and _reload_relevant(options) == _reload_relevant(
+            entry.options
+        ):
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
 
     @staticmethod
