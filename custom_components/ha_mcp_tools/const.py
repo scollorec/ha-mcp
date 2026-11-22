@@ -299,7 +299,6 @@ OPT_REMOTE_MCP_NAMESPACE = "remote_mcp_namespace"
 OPT_REMOTE_MCP_URL = "remote_mcp_url"
 OPT_REMOTE_MCP_BEARER_TOKEN = "remote_mcp_bearer_token"
 OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN = "remote_mcp_clear_bearer_token"
-DATA_REMOTE_MCP_BEARER_TOKEN = "remote_mcp_bearer_token"
 # Connect-URL surface + secret management (owner request, parity with the
 # webhook-proxy app's external-URL option and the add-on's secret-path
 # override). All optional; empty string = automatic/keep-current.
@@ -350,6 +349,7 @@ OPT_OAUTH_ALLOW_ANY_CALLBACK = "oauth_allow_any_callback"
 # entry.data keys (persisted ids + secrets; entry.data is fine for secrets).
 DATA_WEBHOOK_ID = "webhook_id"
 DATA_SECRET_PATH = "secret_path"
+DATA_REMOTE_MCP_BEARER_TOKEN = "remote_mcp_bearer_token"
 # Set by the package repair's fix flow: the next start reinstalls the server
 # package even though its version is satisfied, before anything imports it. A
 # dependency another integration downgraded only resolves again on a
