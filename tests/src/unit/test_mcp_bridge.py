@@ -39,7 +39,7 @@ def _install_entry(
     )
 
 
-def test_connections_list_contains_metadata_but_not_endpoint_or_secret(
+async def test_connections_list_contains_metadata_but_not_endpoint_or_secret(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     coordinator = SimpleNamespace(
