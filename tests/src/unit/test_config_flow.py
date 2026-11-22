@@ -49,6 +49,10 @@ from custom_components.ha_mcp_tools.const import (
     OPT_OAUTH_REGENERATE,
     OPT_PIP_SPEC,
     OPT_REGENERATE_SECRETS,
+    OPT_REMOTE_MCP_BEARER_TOKEN,
+    OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN,
+    OPT_REMOTE_MCP_NAMESPACE,
+    OPT_REMOTE_MCP_URL,
     OPT_SECRET_PATH_OVERRIDE,
     OPT_SERVER_PORT,
     OPT_SERVER_URL,
@@ -303,6 +307,8 @@ async def test_form_prefills_every_field_from_saved_options(
         OPT_WEBHOOK_AUTH: WEBHOOK_AUTH_HA,
         OPT_PIP_SPEC: "ha-mcp==0.0.1",
         OPT_SERVER_URL: "https://ha.example:8123",
+        OPT_REMOTE_MCP_NAMESPACE: "fedora",
+        OPT_REMOTE_MCP_URL: "http://192.168.1.55:8765/mcp",
         OPT_ENABLE_LLM_API: False,
         OPT_ACCESS_OFF_AFTER_RESTART: True,
         OPT_LLM_API_EXPOSURE: EXPOSURE_FULL,
@@ -316,6 +322,8 @@ async def test_form_prefills_every_field_from_saved_options(
     text_fields = (
         OPT_PIP_SPEC,
         OPT_SERVER_URL,
+        OPT_REMOTE_MCP_NAMESPACE,
+        OPT_REMOTE_MCP_URL,
         OPT_EXTERNAL_URL,
         OPT_WEBHOOK_ID_OVERRIDE,
         OPT_SECRET_PATH_OVERRIDE,
@@ -339,6 +347,8 @@ async def test_form_prefills_every_field_from_saved_options(
         OPT_ENABLE_STARTUP_NOTIFICATION: True,
         OPT_ENABLE_SIDEBAR_PANEL: True,
         OPT_OAUTH_ALLOW_ANY_CALLBACK: False,
+        OPT_REMOTE_MCP_BEARER_TOKEN: "",
+        OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN: False,
     }
     never_prefilled = (
         OPT_ADMIN_TOKEN_REPLACEMENT,

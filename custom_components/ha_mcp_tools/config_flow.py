@@ -111,6 +111,12 @@ from .oauth_redirect_allowlist import (
     normalize_allowlist,
     stored_allowlist,
 )
+from .remote_mcp import (
+    adopt_remote_mcp_token,
+    normalize_remote_mcp_options,
+    remote_mcp_form_errors,
+    remote_mcp_option_fields,
+)
 from .server_pin import server_pins
 from .spec_dist import version_dist
 
@@ -433,6 +439,7 @@ class HaMcpServerOptionsFlow(OptionsFlow):
         invalid: list[str] = []
         if user_input is not None:
             errors = self._connect_path_override_errors(user_input)
+            errors.update(remote_mcp_form_errors(user_input))
             entries, invalid = normalize_allowlist(
                 user_input.get(OPT_OAUTH_REDIRECT_ALLOWLIST) or []
             )
@@ -463,6 +470,13 @@ class HaMcpServerOptionsFlow(OptionsFlow):
                     data[OPT_OAUTH_REDIRECT_ALLOWLIST] = stored
                 if credential is not None:
                     self._adopt_token(*credential, data)
+                adopt_remote_mcp_token(
+                    self.hass,
+                    self.config_entry,
+                    user_input,
+                    data,
+                    schedule_reload=credential is None,
+                )
                 return self.async_create_entry(title="", data=data)
 
         # A validation failure must re-render the values the user just entered.
@@ -529,6 +543,7 @@ class HaMcpServerOptionsFlow(OptionsFlow):
                         "suggested_value": suggested_values.get(OPT_SERVER_URL, "")
                     },
                 ): str,
+                **remote_mcp_option_fields(suggested_values, form_values),
                 vol.Required(
                     OPT_ENABLE_WEBHOOK,
                     default=bool(form_values.get(OPT_ENABLE_WEBHOOK, True)),
@@ -755,7 +770,7 @@ class HaMcpServerOptionsFlow(OptionsFlow):
             cleaned[OPT_SERVER_URL] = server_url
         else:
             cleaned.pop(OPT_SERVER_URL, None)
-        return cleaned
+        return normalize_remote_mcp_options(cleaned)
 
     async def _versions_hint(self, common: dict[str, str]) -> str:
         """Return a one-line component + server version summary for the form.

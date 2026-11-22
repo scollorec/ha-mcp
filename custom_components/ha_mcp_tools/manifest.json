@@ -1,6 +1,6 @@
 {
     "domain": "ha_mcp_tools",
-    "name": "HA-MCP — Manage Home Assistant with AI",
+    "name": "HA-MCP-SCO",
     "after_dependencies": [
         "backup",
         "cloud",

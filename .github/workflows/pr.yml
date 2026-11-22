@@ -266,6 +266,10 @@ jobs:
       uses: hacs/action@1ebf01c408f29afcb6406bd431bc98fd8cbb15aa # main
       with:
         category: integration
+        # This is a fork-only PR check. The fork owner has not enabled
+        # GitHub Issues or configured Marketplace topics; all structural,
+        # manifest, hacs.json and Hassfest checks remain enabled.
+        ignore: issues topics
 
     - name: Hassfest
       if: success() || failure()
@@ -985,12 +989,15 @@ jobs:
         # checkout does not fetch.
         fetch-depth: 0
 
-    - name: Verify stable tag is present
+    - name: Ensure upstream stable tag is available
       run: |
+        # Forks do not inherit Git tags. Fetch the released component's stable
+        # tag from the source repository so the update-path test still exercises
+        # an installed release before updating to this PR's wheel.
         if ! git rev-parse --verify refs/tags/stable >/dev/null 2>&1; then
-          echo "::error::The 'stable' git tag is missing — the update-path lane checks the released component out from it. Ensure checkout uses fetch-depth: 0."
-          exit 1
+          git fetch --no-tags https://github.com/homeassistant-ai/ha-mcp.git refs/tags/stable:refs/tags/stable
         fi
+        git rev-parse --verify refs/tags/stable >/dev/null
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
