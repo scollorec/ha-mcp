@@ -56,7 +56,7 @@ class HomeAssistantCoreMCPTool(Tool):
                 tool_args=arguments,
                 _wait_timeout=_BRIDGE_COMMAND_TIMEOUT_SECONDS,
             )
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             _LOGGER.warning(
                 "Home Assistant Core MCP invocation failed for tool %r",
                 self._backend_name,
@@ -76,7 +76,7 @@ class HomeAssistantCoreMCPTool(Tool):
 
         try:
             call_result = mcp_types.CallToolResult.model_validate(dict(raw_result))
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             raise ToolError(
                 "Home Assistant Core MCP returned an unsupported tool result"
             ) from err
@@ -112,7 +112,7 @@ class HomeAssistantCoreMCPProvider(Provider):
                 entry_id=self.entry_id,
                 _wait_timeout=_BRIDGE_COMMAND_TIMEOUT_SECONDS,
             )
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             _LOGGER.warning(
                 "Could not discover tools from Home Assistant MCP entry %s",
                 self.entry_id,
@@ -124,7 +124,9 @@ class HomeAssistantCoreMCPProvider(Provider):
 
         payload = response.get("result")
         if not isinstance(payload, Mapping):
-            raise ToolError("Home Assistant Core MCP returned an invalid tool catalogue")
+            raise ToolError(
+                "Home Assistant Core MCP returned an invalid tool catalogue"
+            )
 
         raw_tools = payload.get("tools")
         if not isinstance(raw_tools, list):
@@ -133,12 +135,16 @@ class HomeAssistantCoreMCPProvider(Provider):
         tools: list[Tool] = []
         for record in raw_tools:
             if not isinstance(record, Mapping):
-                raise ToolError("Home Assistant Core MCP returned an invalid tool record")
+                raise ToolError(
+                    "Home Assistant Core MCP returned an invalid tool record"
+                )
 
             name = record.get("name")
             input_schema = record.get("input_schema")
             if not isinstance(name, str) or not name:
-                raise ToolError("Home Assistant Core MCP returned a tool without a name")
+                raise ToolError(
+                    "Home Assistant Core MCP returned a tool without a name"
+                )
             if not isinstance(input_schema, dict):
                 raise ToolError(
                     f"Home Assistant Core MCP returned an invalid schema for {name!r}"
@@ -159,7 +165,7 @@ class HomeAssistantCoreMCPProvider(Provider):
                         annotations=annotations,
                     )
                 )
-            except Exception as err:  # noqa: BLE001
+            except Exception as err:
                 raise ToolError(
                     f"Home Assistant Core MCP returned invalid metadata for {name!r}"
                 ) from err
@@ -191,9 +197,7 @@ class HomeAssistantCoreMCPProvider(Provider):
         """Resolve a cached tool; the HA component revalidates it before calling."""
         tools = await self._get_cached_tools()
         for tool in tools:
-            if tool.name == name and (
-                version is None or version.matches(tool.version)
-            ):
+            if tool.name == name and (version is None or version.matches(tool.version)):
                 return tool
         return None
 
