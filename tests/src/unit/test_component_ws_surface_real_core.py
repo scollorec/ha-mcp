@@ -167,9 +167,7 @@ async def test_a_non_admin_is_refused_every_command(
     assert reply["error"]["code"] == "unauthorized"
 
 
-@pytest.mark.parametrize(
-    ("command", "params"), list(_MCP_BRIDGE_COMMANDS.items())
-)
+@pytest.mark.parametrize(("command", "params"), list(_MCP_BRIDGE_COMMANDS.items()))
 async def test_a_non_admin_is_refused_every_core_mcp_bridge_command(
     component_ws_read_only: MockHAClientWebSocket,
     command: str,
