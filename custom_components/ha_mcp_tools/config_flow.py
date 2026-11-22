@@ -116,7 +116,7 @@ from .oauth_redirect_allowlist import (
     normalize_allowlist,
     stored_allowlist,
 )
-from .remote_mcp import remote_mcp_config_error
+from .remote_mcp import remote_mcp_form_error
 from .server_pin import server_pins
 from .spec_dist import version_dist
 
@@ -439,20 +439,8 @@ class HaMcpServerOptionsFlow(OptionsFlow):
         invalid: list[str] = []
         if user_input is not None:
             errors = self._connect_path_override_errors(user_input)
-            remote_error = remote_mcp_config_error(
-                str(user_input.get(OPT_REMOTE_MCP_NAMESPACE, "remote") or "remote")
-                .strip()
-                .lower()
-                or "remote",
-                str(user_input.get(OPT_REMOTE_MCP_URL, "") or "").strip(),
-            )
-            if remote_error:
-                remote_field = (
-                    OPT_REMOTE_MCP_NAMESPACE
-                    if remote_error == "invalid_remote_mcp_namespace"
-                    else OPT_REMOTE_MCP_URL
-                )
-                errors[remote_field] = remote_error
+            if remote_error := remote_mcp_form_error(user_input):
+                errors[remote_error[0]] = remote_error[1]
             entries, invalid = normalize_allowlist(
                 user_input.get(OPT_OAUTH_REDIRECT_ALLOWLIST) or []
             )
@@ -483,18 +471,9 @@ class HaMcpServerOptionsFlow(OptionsFlow):
                     data[OPT_OAUTH_REDIRECT_ALLOWLIST] = stored
                 if credential is not None:
                     self._adopt_token(*credential, data)
-                remote_token = str(
-                    user_input.get(OPT_REMOTE_MCP_BEARER_TOKEN, "") or ""
-                ).strip()
-                clear_remote_token = bool(
-                    user_input.get(OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN, False)
+                self._adopt_remote_mcp_token_from_input(
+                    user_input, data, schedule_reload=credential is None
                 )
-                if remote_token or clear_remote_token:
-                    self._adopt_remote_mcp_token(
-                        remote_token if remote_token else None,
-                        data,
-                        schedule_reload=credential is None,
-                    )
                 return self.async_create_entry(title="", data=data)
 
         # A validation failure must re-render the values the user just entered.
@@ -747,6 +726,21 @@ class HaMcpServerOptionsFlow(OptionsFlow):
         )
         if _reload_relevant(options) == _reload_relevant(entry.options):
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    def _adopt_remote_mcp_token_from_input(
+        self,
+        user_input: Mapping[str, Any],
+        options: Mapping[str, Any],
+        *,
+        schedule_reload: bool,
+    ) -> None:
+        """Adopt an optional token entered in the options form."""
+        token = str(user_input.get(OPT_REMOTE_MCP_BEARER_TOKEN, "") or "").strip()
+        clear = bool(user_input.get(OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN, False))
+        if token or clear:
+            self._adopt_remote_mcp_token(
+                token or None, options, schedule_reload=schedule_reload
+            )
 
     def _adopt_remote_mcp_token(
         self,
