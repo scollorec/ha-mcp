@@ -239,8 +239,8 @@ async def test_connection_must_be_a_loaded_core_mcp_entry(
     _install_entry(hass, entry, monkeypatch)
 
     with pytest.raises(HomeAssistantError, match="not loaded"):
-        await _mcp_list_tools_prep(hass, {"entry_id": "mcp-entry"})
+        await mcp_list_tools_prep(hass, {"entry_id": "mcp-entry"})
 
     entry.domain = "not_mcp"
     with pytest.raises(HomeAssistantError, match="not found"):
-        await _mcp_list_tools_prep(hass, {"entry_id": "mcp-entry"})
+        await mcp_list_tools_prep(hass, {"entry_id": "mcp-entry"})
