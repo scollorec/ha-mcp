@@ -75,6 +75,7 @@ from .const import (
     SERVER_CONFIG_SUBDIR,
     SERVER_KEEPALIVE_SECONDS,
 )
+from .core_mcp_options import core_mcp_config_snapshot
 from .dependency_diagnostics import (
     DependencyViolation,
     PinningIntegration,
@@ -95,7 +96,6 @@ from .embedded_worker_teardown import (
 )
 from .loopback_url import derive_loopback_url
 from .purged_modules import release_purged_modules
-from .core_mcp_options import core_mcp_config_snapshot
 from .remote_mcp import (
     register_remote_mcp_if_configured,
     remote_mcp_config_snapshot,
@@ -240,6 +240,35 @@ def _install_log_filters_if_available() -> None:
         _LOGGER.warning(
             "Could not install MCP SDK log-noise filters; continuing without them: %s",
             err,
+        )
+
+
+def _register_core_mcp_provider(mcp: Any, config: tuple[str, str]) -> None:
+    """Best-effort registration of the selected existing Core MCP connection."""
+    entry_id, namespace = config
+    if not entry_id:
+        return
+
+    try:
+        from ha_mcp.providers.home_assistant_core import register_home_assistant_core_mcp
+    except ModuleNotFoundError as err:
+        if err.name != "ha_mcp.providers.home_assistant_core":
+            raise
+        _LOGGER.warning(
+            "The installed ha-mcp package does not include the "
+            "Home Assistant Core MCP provider; selected tools are unavailable"
+        )
+        return
+
+    try:
+        register_home_assistant_core_mcp(
+            mcp,
+            entry_id=entry_id,
+            namespace=namespace,
+        )
+    except Exception:
+        _LOGGER.exception(
+            "Could not register the selected Home Assistant Core MCP entry"
         )
 
 
@@ -1500,30 +1529,7 @@ class EmbeddedServerManager:
         server = HomeAssistantSmartMCPServer()
 
         register_remote_mcp_if_configured(server.mcp, self._remote_mcp_config)
-        core_mcp_entry_id, core_mcp_namespace = self._core_mcp_config
-        if core_mcp_entry_id:
-            try:
-                from ha_mcp.providers.home_assistant_core import (
-                    register_home_assistant_core_mcp,
-                )
-            except ModuleNotFoundError as err:
-                if err.name != "ha_mcp.providers.home_assistant_core":
-                    raise
-                _LOGGER.warning(
-                    "The installed ha-mcp package does not include the "
-                    "Home Assistant Core MCP provider; selected tools are unavailable"
-                )
-            else:
-                try:
-                    register_home_assistant_core_mcp(
-                        server.mcp,
-                        entry_id=core_mcp_entry_id,
-                        namespace=core_mcp_namespace,
-                    )
-                except Exception:  # noqa: BLE001
-                    _LOGGER.exception(
-                        "Could not register the selected Home Assistant Core MCP entry"
-                    )
+        _register_core_mcp_provider(server.mcp, self._core_mcp_config)
 
         # Startup observability (no secrets): confirm the in-memory connection
         # channel actually reached the settings singleton — a sentinel here means
