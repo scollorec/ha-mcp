@@ -13,9 +13,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 
 from custom_components.ha_mcp_tools.websocket_api.mcp_bridge import (
-    _do_mcp_connections,
-    _mcp_call_tool_prep,
-    _mcp_list_tools_prep,
+    do_mcp_connections,
+    mcp_call_tool_prep,
+    mcp_list_tools_prep,
 )
 
 
@@ -55,7 +55,7 @@ async def test_connections_list_contains_metadata_but_not_endpoint_or_secret(
         lambda domain: [entry] if domain == "mcp" else [],
     )
 
-    result = _do_mcp_connections(hass, {})
+    result = do_mcp_connections(hass, {})
 
     assert result == {
         "connections": [
@@ -99,7 +99,7 @@ async def test_list_tools_refreshes_core_and_serializes_schema_and_annotations(
     entry = _entry(coordinator)
     _install_entry(hass, entry, monkeypatch)
 
-    result = await _mcp_list_tools_prep(hass, {"entry_id": "mcp-entry"})
+    result = await mcp_list_tools_prep(hass, {"entry_id": "mcp-entry"})
 
     coordinator.async_refresh.assert_awaited_once()
     assert result["payload"]["entry_id"] == "mcp-entry"
@@ -168,7 +168,7 @@ async def test_call_tool_uses_core_wrapper_and_validated_arguments(
     _install_entry(hass, entry, monkeypatch)
     caller_context = Context()
 
-    result = await _mcp_call_tool_prep(
+    result = await mcp_call_tool_prep(
         hass,
         {
             "entry_id": "mcp-entry",
