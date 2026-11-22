@@ -11,7 +11,7 @@ import re
 from typing import Any
 from urllib.parse import urlsplit
 
-_NAMESPACE_RE = re.compile(r"[a-z][a-z0-9_]{0,31}\\Z")
+_NAMESPACE_RE = re.compile(r"[a-z][a-z0-9_]{0,31}")
 
 
 def remote_mcp_config_error(namespace: str, url: str) -> str | None:
