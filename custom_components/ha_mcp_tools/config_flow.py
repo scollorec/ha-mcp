@@ -104,17 +104,17 @@ from .const import (
     WEBHOOK_AUTH_LEGACY,
     WEBHOOK_AUTH_NONE,
 )
+from .core_mcp_options import (
+    core_mcp_form_errors,
+    core_mcp_option_fields,
+    normalize_core_mcp_options,
+)
 from .oauth_redirect_allowlist import (
     MAX_OAUTH_CALLBACKS,
     OPT_OAUTH_REDIRECT_ALLOWLIST,
     effective_allowlist,
     normalize_allowlist,
     stored_allowlist,
-)
-from .core_mcp_options import (
-    core_mcp_form_errors,
-    core_mcp_option_fields,
-    normalize_core_mcp_options,
 )
 from .remote_mcp import (
     adopt_remote_mcp_token,
@@ -550,9 +550,7 @@ class HaMcpServerOptionsFlow(OptionsFlow):
                     },
                 ): str,
                 **remote_mcp_option_fields(suggested_values, form_values),
-                **core_mcp_option_fields(
-                    self.hass, suggested_values, form_values
-                ),
+                **core_mcp_option_fields(self.hass, suggested_values, form_values),
                 vol.Required(
                     OPT_ENABLE_WEBHOOK,
                     default=bool(form_values.get(OPT_ENABLE_WEBHOOK, True)),
