@@ -27,6 +27,8 @@ from custom_components.ha_mcp_tools.const import (
     DATA_REMOTE_MCP_BEARER_TOKEN,
     DATA_WEBHOOK_ID,
     OPT_ADMIN_TOKEN_REPLACEMENT,
+    OPT_CORE_MCP_ENTRY_ID,
+    OPT_CORE_MCP_NAMESPACE,
     OPT_OAUTH_ALLOW_ANY_CALLBACK,
     OPT_PIP_SPEC,
     OPT_REMOTE_MCP_BEARER_TOKEN,
@@ -162,6 +164,67 @@ async def test_removing_every_callback_sticks(hass: HomeAssistant) -> None:
     await _save(hass, entry, {})
 
     assert entry.options[OPT_OAUTH_REDIRECT_ALLOWLIST] == []
+
+
+async def test_selected_core_mcp_connection_is_saved_with_normalized_namespace(
+    hass: HomeAssistant,
+) -> None:
+    """The embedded server stores the existing Core entry ID, not its URL or token."""
+    core_entry = MockConfigEntry(domain="mcp", title="Fedora workstation")
+    core_entry.add_to_hass(hass)
+    entry = add_options_entry(hass)
+
+    await _save(
+        hass,
+        entry,
+        {
+            OPT_CORE_MCP_ENTRY_ID: core_entry.entry_id,
+            OPT_CORE_MCP_NAMESPACE: "Fedora_Workstation",
+        },
+    )
+
+    assert entry.options[OPT_CORE_MCP_ENTRY_ID] == core_entry.entry_id
+    assert entry.options[OPT_CORE_MCP_NAMESPACE] == "fedora_workstation"
+
+
+async def test_core_mcp_connection_selection_can_be_disabled(
+    hass: HomeAssistant,
+) -> None:
+    """Selecting Disabled removes the Core entry ID and namespace from options."""
+    core_entry = MockConfigEntry(domain="mcp", title="Fedora workstation")
+    core_entry.add_to_hass(hass)
+    entry = add_options_entry(
+        hass,
+        options={
+            OPT_CORE_MCP_ENTRY_ID: core_entry.entry_id,
+            OPT_CORE_MCP_NAMESPACE: "fedora_workstation",
+        },
+    )
+
+    await _save(hass, entry, {OPT_CORE_MCP_ENTRY_ID: ""})
+
+    assert OPT_CORE_MCP_ENTRY_ID not in entry.options
+    assert OPT_CORE_MCP_NAMESPACE not in entry.options
+
+
+async def test_core_mcp_selection_rejects_non_mcp_entries(
+    hass: HomeAssistant,
+) -> None:
+    """Only a config entry owned by Home Assistant's MCP integration is selectable."""
+    other_entry = MockConfigEntry(domain="mqtt", title="MQTT")
+    other_entry.add_to_hass(hass)
+    entry = add_options_entry(hass)
+
+    result = await _save(
+        hass,
+        entry,
+        {
+            OPT_CORE_MCP_ENTRY_ID: other_entry.entry_id,
+            OPT_CORE_MCP_NAMESPACE: "mqtt",
+        },
+    )
+
+    assert result["errors"] == {OPT_CORE_MCP_ENTRY_ID: "invalid_core_mcp_entry"}
 
 
 async def test_remote_mcp_upstream_settings_are_saved(
