@@ -54,7 +54,9 @@
             "token_not_long_lived": "This is a temporary sign-in token, which expires. Create a long-lived access token instead.",
             "token_not_admin": "This token belongs to an account that is not an active administrator.",
             "invalid_login": "Enter the user name and password of a local-only administrator account made for HA-MCP.",
-            "credentials_needed": "Enter an administrator account's user name and password, or paste an access token."
+            "credentials_needed": "Enter an administrator account's user name and password, or paste an access token.",
+            "invalid_remote_mcp_namespace": "Use 1-32 lowercase letters, digits or underscores; start with a letter.",
+            "invalid_remote_mcp_url": "Enter an http:// or https:// MCP endpoint URL without embedded credentials or a fragment."
         },
         "step": {
             "tools_info": {
@@ -81,6 +83,10 @@
                     "oauth_regenerate": "Legacy OAuth: regenerate Client ID/Secret now",
                     "pip_spec": "Developer: ha-mcp package override",
                     "server_url": "Home Assistant URL (advanced)",
+                    "remote_mcp_namespace": "Remote MCP namespace",
+                    "remote_mcp_url": "Remote MCP endpoint URL",
+                    "remote_mcp_bearer_token": "Remote MCP bearer token (optional)",
+                    "remote_mcp_clear_bearer_token": "Remove stored remote MCP bearer token",
                     "external_url": "External URL (optional)",
                     "webhook_id_override": "Custom webhook secret (optional)",
                     "secret_path_override": "Custom direct-access path (optional)",
@@ -106,6 +112,10 @@
                     "oauth_regenerate": "One-time action: mints a fresh Client ID and Secret for legacy OAuth mode. It takes effect only after the Home Assistant restart the repair prompt asks for - until you restart, the previous Client ID and Secret keep working and the new ones do not. Also clears the two override fields above.",
                     "pip_spec": "Leave empty to run the ha-mcp server this component release installed. Only for testing a specific ha-mcp build (a version pin, a pull-request tarball or a wheel URL); applied by reloading the server, without restarting Home Assistant. Clear it to return to the paired server.",
                     "server_url": "The URL the in-process server uses to reach your Home Assistant (usually this instance itself). Leave empty to derive it from this instance's port and SSL settings; set a value only when the server needs a different route.",
+                    "remote_mcp_namespace": "Prefix applied to every proxied tool and prompt from this upstream. Use a short lowercase name such as fedora; tools then appear as fedora_network_interfaces. Leave the endpoint URL empty to disable the upstream.",
+                    "remote_mcp_url": "Streamable HTTP MCP endpoint, for example http://192.168.1.55:8765/mcp. The upstream is contacted when its tools are listed or called, not during HA-MCP startup. Only configure trusted endpoints reachable from this Home Assistant machine.",
+                    "remote_mcp_bearer_token": "Optional Bearer credential for the remote MCP server. Leave empty to keep the currently stored token. It is stored separately from options and is never shown again.",
+                    "remote_mcp_clear_bearer_token": "Remove the previously stored remote MCP Bearer credential. A newly entered token takes precedence.",
                     "external_url": "Shown as the primary connect URL - use this when Home Assistant sits behind your own domain or reverse proxy. Enter the full base address including the scheme. It must point directly at Home Assistant - opening it in a browser should reach your HA login page - and must not contain a port such as :8123 (or any other port), or remote MCP clients won't be able to reach it. Leave empty to use Nabu Casa / the local address automatically.",
                     "webhook_id_override": "Replaces the random webhook secret in the connect URL (/api/webhook/...). The URL is the credential - use a long, hard-to-guess value. Leave empty to keep the current one.",
                     "secret_path_override": "Replaces the random path used for direct access on the server port. Same rule: the path is the credential. Leave empty to keep the current one.",
