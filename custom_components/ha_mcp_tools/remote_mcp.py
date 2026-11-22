@@ -7,7 +7,6 @@ upstream.
 
 from __future__ import annotations
 
-import importlib
 import logging
 import re
 from collections.abc import Mapping
@@ -189,8 +188,10 @@ def register_remote_mcp_upstream(
     # Resolve vendored FastMCP modules dynamically. The component import guard
     # scans Python import nodes and forbids static ha_mcp imports anywhere in
     # the component, even inside worker-only functions.
-    transports = importlib.import_module("ha_mcp._vendor.fastmcp.client.transports")
-    proxies = importlib.import_module("ha_mcp._vendor.fastmcp.server.providers.proxy")
+    from importlib import import_module
+
+    transports = import_module("ha_mcp._vendor.fastmcp.client.transports")
+    proxies = import_module("ha_mcp._vendor.fastmcp.server.providers.proxy")
     streamable_http_transport = transports.StreamableHttpTransport
     proxy_client = proxies.ProxyClient
     proxy_provider = proxies.ProxyProvider
