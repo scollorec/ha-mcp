@@ -128,9 +128,3 @@ def normalize_core_mcp_options(cleaned: dict[str, Any]) -> dict[str, Any]:
     return cleaned
 
 
-def core_mcp_config_snapshot(options: Mapping[str, Any]) -> tuple[str, str]:
-    """Copy the non-secret Core MCP selection before worker startup."""
-    return (
-        str(options.get(OPT_CORE_MCP_ENTRY_ID, "") or "").strip(),
-        str(options.get(OPT_CORE_MCP_NAMESPACE, "remote") or "remote").strip().lower(),
-    )
