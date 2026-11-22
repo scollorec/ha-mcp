@@ -7,10 +7,19 @@ lightweight.
 
 from __future__ import annotations
 
+import logging
 import re
+from collections.abc import Mapping
 from typing import Any
 from urllib.parse import urlsplit
 
+from .const import (
+    DATA_REMOTE_MCP_BEARER_TOKEN,
+    OPT_REMOTE_MCP_NAMESPACE,
+    OPT_REMOTE_MCP_URL,
+)
+
+_LOGGER = logging.getLogger(__name__)
 _NAMESPACE_RE = re.compile(r"[a-z][a-z0-9_]{0,31}")
 
 
@@ -35,6 +44,38 @@ def remote_mcp_config_error(namespace: str, url: str) -> str | None:
     ):
         return "invalid_remote_mcp_url"
     return None
+
+
+def remote_mcp_form_error(
+    user_input: Mapping[str, Any],
+) -> tuple[str, str] | None:
+    """Return the HA options-flow field and error for an invalid upstream."""
+    namespace = str(
+        user_input.get(OPT_REMOTE_MCP_NAMESPACE, "remote") or "remote"
+    ).strip().lower() or "remote"
+    url = str(user_input.get(OPT_REMOTE_MCP_URL, "") or "").strip()
+    error = remote_mcp_config_error(namespace, url)
+    if error is None:
+        return None
+    field = (
+        OPT_REMOTE_MCP_NAMESPACE
+        if error == "invalid_remote_mcp_namespace"
+        else OPT_REMOTE_MCP_URL
+    )
+    return field, error
+
+
+def remote_mcp_config_snapshot(
+    options: Mapping[str, Any], data: Mapping[str, Any]
+) -> tuple[str, str, str]:
+    """Copy settings and the secret off the HA event loop before worker startup."""
+    return (
+        str(options.get(OPT_REMOTE_MCP_NAMESPACE, "remote") or "remote")
+        .strip()
+        .lower(),
+        str(options.get(OPT_REMOTE_MCP_URL, "") or "").strip(),
+        str(data.get(DATA_REMOTE_MCP_BEARER_TOKEN, "") or ""),
+    )
 
 
 def register_remote_mcp_upstream(
@@ -73,3 +114,24 @@ def register_remote_mcp_upstream(
         return ProxyClient(transport, forward_incoming_headers=False)
 
     mcp.add_provider(ProxyProvider(client_factory, cache_ttl=30.0), namespace=namespace)
+
+
+def register_remote_mcp_upstream_if_configured(
+    mcp: Any, config: tuple[str, str, str]
+) -> None:
+    """Register the optional upstream, isolating failures from HA-MCP startup."""
+    namespace, url, bearer_token = config
+    if not url:
+        return
+    try:
+        register_remote_mcp_upstream(
+            mcp, namespace=namespace, url=url, bearer_token=bearer_token
+        )
+    except Exception:
+        _LOGGER.exception(
+            "Could not register remote MCP upstream %r; "
+            "continuing with Home Assistant tools only",
+            namespace,
+        )
+    else:
+        _LOGGER.info("Registered remote MCP upstream under namespace %r", namespace)
