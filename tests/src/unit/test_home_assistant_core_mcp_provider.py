@@ -7,8 +7,6 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from ha_mcp._vendor import mcp_types
-from ha_mcp._vendor.fastmcp.server.providers.base import Provider
 from ha_mcp._vendor.fastmcp.tools.base import ToolResult
 from ha_mcp.providers import home_assistant_core as core_mcp
 
