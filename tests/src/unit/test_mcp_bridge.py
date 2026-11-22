@@ -52,7 +52,7 @@ async def test_connections_list_contains_metadata_but_not_endpoint_or_secret(
     monkeypatch.setattr(
         hass.config_entries,
         "async_entries",
-        lambda domain: [entry] if domain == "mcp" else [],
+        lambda domain=None: [entry] if domain in (None, "mcp") else [],
     )
 
     result = do_mcp_connections(hass, {})
@@ -139,7 +139,7 @@ async def test_list_tools_fails_closed_when_refresh_fails(
     _install_entry(hass, entry, monkeypatch)
 
     with pytest.raises(HomeAssistantError, match="discovery failed"):
-        await _mcp_list_tools_prep(hass, {"entry_id": "mcp-entry"})
+        await mcp_list_tools_prep(hass, {"entry_id": "mcp-entry"})
 
 
 async def test_call_tool_uses_core_wrapper_and_validated_arguments(
@@ -215,7 +215,7 @@ async def test_call_tool_rejects_invalid_arguments_before_upstream_call(
     _install_entry(hass, entry, monkeypatch)
 
     with pytest.raises(HomeAssistantError, match="Arguments do not match"):
-        await _mcp_call_tool_prep(
+        await mcp_call_tool_prep(
             hass,
             {
                 "entry_id": "mcp-entry",
