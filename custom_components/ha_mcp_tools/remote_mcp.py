@@ -14,7 +14,11 @@ from typing import Any
 from urllib.parse import urlsplit
 
 import voluptuous as vol
-from homeassistant.helpers.selector import TextSelector, TextSelectorConfig, TextSelectorType
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import (
     DATA_REMOTE_MCP_BEARER_TOKEN,
@@ -26,9 +30,6 @@ _LOGGER = logging.getLogger(__name__)
 _NAMESPACE_RE = re.compile(r"[a-z][a-z0-9_]{0,31}")
 
 
-
-
-
 def remote_mcp_option_fields(
     suggested_values: Mapping[str, Any], form_values: Mapping[str, Any]
 ) -> dict[Any, Any]:
@@ -36,7 +37,9 @@ def remote_mcp_option_fields(
     return {
         vol.Optional(
             OPT_REMOTE_MCP_NAMESPACE,
-            default=str(form_values.get(OPT_REMOTE_MCP_NAMESPACE, "remote") or "remote"),
+            default=str(
+                form_values.get(OPT_REMOTE_MCP_NAMESPACE, "remote") or "remote"
+            ),
             description={
                 "suggested_value": suggested_values.get(
                     OPT_REMOTE_MCP_NAMESPACE, "remote"
@@ -205,7 +208,8 @@ def register_remote_mcp_upstream(
         # the explicitly configured bearer token above is sent to this server.
         return proxy_client(transport, forward_incoming_headers=False)
 
-    mcp.add_provider(proxy_provider(client_factory, cache_ttl=30.0), namespace=namespace)
+    provider = proxy_provider(client_factory, cache_ttl=30.0)
+    mcp.add_provider(provider, namespace=namespace)
 
 
 def register_remote_mcp_if_configured(mcp: Any, config: tuple[str, str, str]) -> None:
