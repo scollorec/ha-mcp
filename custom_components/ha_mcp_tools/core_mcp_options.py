@@ -93,7 +93,11 @@ def core_mcp_option_fields(
             OPT_CORE_MCP_ENTRY_ID,
             default=selected_entry_id,
         ): SelectSelector(
-            SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN)
+            SelectSelectorConfig(
+                options=options,
+                mode=SelectSelectorMode.DROPDOWN,
+                custom_value=True,
+            )
         ),
         vol.Optional(
             OPT_CORE_MCP_NAMESPACE,
