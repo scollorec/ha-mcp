@@ -56,7 +56,9 @@
             "invalid_login": "Enter the user name and password of a local-only administrator account made for HA-MCP.",
             "credentials_needed": "Enter an administrator account's user name and password, or paste an access token.",
             "invalid_remote_mcp_namespace": "Use 1-32 lowercase letters, digits or underscores; start with a letter.",
-            "invalid_remote_mcp_url": "Enter an http:// or https:// MCP endpoint URL without embedded credentials or a fragment."
+            "invalid_remote_mcp_url": "Enter an http:// or https:// MCP endpoint URL without embedded credentials or a fragment.",
+            "invalid_core_mcp_entry": "Choose an MCP connection configured in Home Assistant.",
+            "invalid_core_mcp_namespace": "Use 1-32 lowercase letters, digits or underscores; start with a letter."
         },
         "step": {
             "tools_info": {
@@ -101,7 +103,9 @@
                     "remote_mcp_namespace": "Remote MCP namespace",
                     "remote_mcp_url": "Remote MCP endpoint URL",
                     "remote_mcp_bearer_token": "Remote MCP bearer token (optional)",
-                    "remote_mcp_clear_bearer_token": "Remove stored remote MCP bearer token"
+                    "remote_mcp_clear_bearer_token": "Remove stored remote MCP bearer token",
+                    "core_mcp_entry_id": "Existing Home Assistant MCP connection",
+                    "core_mcp_namespace": "Home Assistant MCP namespace"
                 },
                 "data_description": {
                     "server_port": "The port this server listens on. The ha-mcp app (add-on) uses 9583, so this defaults to 9584 to let both run side by side - if you don't run the app (add-on), any free port works.",
@@ -130,7 +134,9 @@
                     "remote_mcp_namespace": "Prefix applied to every proxied tool and prompt from this upstream. Use a short lowercase name such as fedora; tools then appear as fedora_network_interfaces. Leave the endpoint URL empty to disable the upstream.",
                     "remote_mcp_url": "Streamable HTTP MCP endpoint, for example http://192.168.1.55:8765/mcp. The upstream is contacted when its tools are listed or called, not during HA-MCP startup. Only configure trusted endpoints reachable from this Home Assistant machine.",
                     "remote_mcp_bearer_token": "Optional Bearer credential for the remote MCP server. Leave empty to keep the currently stored token. It is stored separately from options and is never shown again.",
-                    "remote_mcp_clear_bearer_token": "Remove the previously stored remote MCP Bearer credential. A newly entered token takes precedence."
+                    "remote_mcp_clear_bearer_token": "Remove the previously stored remote MCP Bearer credential. A newly entered token takes precedence.",
+                    "core_mcp_entry_id": "Select an MCP connection already configured in Home Assistant. HA-MCP reuses Home Assistant Core's endpoint and authentication; no second URL or token is stored.",
+                    "core_mcp_namespace": "Prefix the selected connection's tools so they remain distinct from HA-MCP's own tools."
                 }
             }
         }
