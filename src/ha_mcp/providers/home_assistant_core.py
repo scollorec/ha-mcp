@@ -78,7 +78,9 @@ class HomeAssistantCoreMCPTool(Tool):
 
         raw_result = bridge_result.get("result")
         if not isinstance(raw_result, Mapping):
-            raise _tool_error("Home Assistant Core MCP returned an invalid tool payload")
+            raise _tool_error(
+                "Home Assistant Core MCP returned an invalid tool payload"
+            )
 
         try:
             call_result = mcp_types.CallToolResult.model_validate(dict(raw_result))
