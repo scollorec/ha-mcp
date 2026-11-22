@@ -81,6 +81,8 @@ from .const import (
     OPT_ACCESS_OFF_AFTER_RESTART,
     OPT_ADMIN_TOKEN_REPLACEMENT,
     OPT_BIND_HOST,
+    OPT_CORE_MCP_ENTRY_ID,
+    OPT_CORE_MCP_NAMESPACE,
     OPT_ENABLE_LLM_API,
     OPT_ENABLE_SIDEBAR_PANEL,
     OPT_ENABLE_STARTUP_NOTIFICATION,
@@ -116,6 +118,12 @@ from .remote_mcp import (
     normalize_remote_mcp_options,
     remote_mcp_form_errors,
     remote_mcp_option_fields,
+)
+from .core_mcp_options import (
+    core_mcp_config_snapshot,
+    core_mcp_form_errors,
+    core_mcp_option_fields,
+    normalize_core_mcp_options,
 )
 from .server_pin import server_pins
 from .spec_dist import version_dist
@@ -440,6 +448,7 @@ class HaMcpServerOptionsFlow(OptionsFlow):
         if user_input is not None:
             errors = self._connect_path_override_errors(user_input)
             errors.update(remote_mcp_form_errors(user_input))
+            errors.update(core_mcp_form_errors(self.hass, user_input))
             entries, invalid = normalize_allowlist(
                 user_input.get(OPT_OAUTH_REDIRECT_ALLOWLIST) or []
             )
@@ -544,6 +553,9 @@ class HaMcpServerOptionsFlow(OptionsFlow):
                     },
                 ): str,
                 **remote_mcp_option_fields(suggested_values, form_values),
+                **core_mcp_option_fields(
+                    self.hass, suggested_values, form_values
+                ),
                 vol.Required(
                     OPT_ENABLE_WEBHOOK,
                     default=bool(form_values.get(OPT_ENABLE_WEBHOOK, True)),
@@ -770,7 +782,8 @@ class HaMcpServerOptionsFlow(OptionsFlow):
             cleaned[OPT_SERVER_URL] = server_url
         else:
             cleaned.pop(OPT_SERVER_URL, None)
-        return normalize_remote_mcp_options(cleaned)
+        cleaned = normalize_remote_mcp_options(cleaned)
+        return normalize_core_mcp_options(cleaned)
 
     async def _versions_hint(self, common: dict[str, str]) -> str:
         """Return a one-line component + server version summary for the form.
