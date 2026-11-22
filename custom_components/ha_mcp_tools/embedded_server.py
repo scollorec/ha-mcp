@@ -95,11 +95,11 @@ from .embedded_worker_teardown import (
 )
 from .loopback_url import derive_loopback_url
 from .purged_modules import release_purged_modules
+from .core_mcp_options import core_mcp_config_snapshot
 from .remote_mcp import (
     register_remote_mcp_if_configured,
     remote_mcp_config_snapshot,
 )
-from .core_mcp_options import core_mcp_config_snapshot
 from .server_credentials import (
     CredentialNeeded,
     async_release_credentials,
