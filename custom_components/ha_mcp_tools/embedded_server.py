@@ -99,6 +99,7 @@ from .remote_mcp import (
     register_remote_mcp_if_configured,
     remote_mcp_config_snapshot,
 )
+from .core_mcp_options import core_mcp_config_snapshot
 from .server_credentials import (
     CredentialNeeded,
     async_release_credentials,
@@ -276,6 +277,7 @@ class EmbeddedServerManager:
         self._pip_spec: str = self._resolve_pip_spec()
         self._secret_path: str = str(entry.data.get(DATA_SECRET_PATH, ""))
         self._remote_mcp_config = remote_mcp_config_snapshot(options, entry.data)
+        self._core_mcp_config = core_mcp_config_snapshot(options)
         self._config_dir: str = hass.config.path(SERVER_CONFIG_SUBDIR)
         # Capture on the event loop; the worker's dependency audit cannot touch hass.
         self._hass_config_dir: str = hass.config.config_dir
@@ -1498,6 +1500,30 @@ class EmbeddedServerManager:
         server = HomeAssistantSmartMCPServer()
 
         register_remote_mcp_if_configured(server.mcp, self._remote_mcp_config)
+        core_mcp_entry_id, core_mcp_namespace = self._core_mcp_config
+        if core_mcp_entry_id:
+            try:
+                from ha_mcp.providers.home_assistant_core import (
+                    register_home_assistant_core_mcp,
+                )
+            except ModuleNotFoundError as err:
+                if err.name != "ha_mcp.providers.home_assistant_core":
+                    raise
+                _LOGGER.warning(
+                    "The installed ha-mcp package does not include the "
+                    "Home Assistant Core MCP provider; selected tools are unavailable"
+                )
+            else:
+                try:
+                    register_home_assistant_core_mcp(
+                        server.mcp,
+                        entry_id=core_mcp_entry_id,
+                        namespace=core_mcp_namespace,
+                    )
+                except Exception:  # noqa: BLE001
+                    _LOGGER.exception(
+                        "Could not register the selected Home Assistant Core MCP entry"
+                    )
 
         # Startup observability (no secrets): confirm the in-memory connection
         # channel actually reached the settings singleton — a sentinel here means
