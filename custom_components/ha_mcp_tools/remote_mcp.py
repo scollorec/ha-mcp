@@ -13,6 +13,9 @@ from collections.abc import Mapping
 from typing import Any
 from urllib.parse import urlsplit
 
+import voluptuous as vol
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig, TextSelectorType
+
 from .const import (
     DATA_REMOTE_MCP_BEARER_TOKEN,
     OPT_REMOTE_MCP_NAMESPACE,
@@ -21,6 +24,86 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 _NAMESPACE_RE = re.compile(r"[a-z][a-z0-9_]{0,31}")
+
+
+
+
+
+def remote_mcp_option_fields(
+    suggested_values: Mapping[str, Any], form_values: Mapping[str, Any]
+) -> dict[Any, Any]:
+    """Build the remote-upstream fields for the HA server options form."""
+    return {
+        vol.Optional(
+            OPT_REMOTE_MCP_NAMESPACE,
+            default=str(form_values.get(OPT_REMOTE_MCP_NAMESPACE, "remote") or "remote"),
+            description={
+                "suggested_value": suggested_values.get(
+                    OPT_REMOTE_MCP_NAMESPACE, "remote"
+                )
+            },
+        ): str,
+        vol.Optional(
+            OPT_REMOTE_MCP_URL,
+            default=str(form_values.get(OPT_REMOTE_MCP_URL, "") or ""),
+            description={
+                "suggested_value": suggested_values.get(OPT_REMOTE_MCP_URL, "")
+            },
+        ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
+        # Never pre-filled: the stored bearer token is kept out of the options form.
+        vol.Optional(OPT_REMOTE_MCP_BEARER_TOKEN, default=""): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD, autocomplete="off")
+        ),
+        vol.Optional(OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN, default=False): bool,
+    }
+
+
+def normalize_remote_mcp_options(cleaned: dict[str, Any]) -> dict[str, Any]:
+    """Normalize optional upstream values and strip credentials from options."""
+    remote_url = str(cleaned.get(OPT_REMOTE_MCP_URL, "") or "").strip()
+    if remote_url:
+        cleaned[OPT_REMOTE_MCP_URL] = remote_url
+        cleaned[OPT_REMOTE_MCP_NAMESPACE] = (
+            str(cleaned.get(OPT_REMOTE_MCP_NAMESPACE, "remote") or "remote")
+            .strip()
+            .lower()
+            or "remote"
+        )
+    else:
+        cleaned.pop(OPT_REMOTE_MCP_URL, None)
+        cleaned.pop(OPT_REMOTE_MCP_NAMESPACE, None)
+    # Credentials belong in entry.data, never the publicly readable options.
+    cleaned.pop(OPT_REMOTE_MCP_BEARER_TOKEN, None)
+    cleaned.pop(OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN, None)
+    return cleaned
+
+
+def adopt_remote_mcp_token(
+    hass: Any,
+    entry: Any,
+    user_input: Mapping[str, Any],
+    options: Mapping[str, Any],
+    *,
+    schedule_reload: bool,
+) -> None:
+    """Store the upstream bearer token in entry.data and reload when needed."""
+    token = str(user_input.get(OPT_REMOTE_MCP_BEARER_TOKEN, "") or "").strip()
+    clear = bool(user_input.get(OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN, False))
+    if not token and not clear:
+        return
+    data = dict(entry.data)
+    if token:
+        data[DATA_REMOTE_MCP_BEARER_TOKEN] = token
+    else:
+        data.pop(DATA_REMOTE_MCP_BEARER_TOKEN, None)
+    if data == entry.data:
+        return
+    hass.config_entries.async_update_entry(entry, data=data)
+    # A token-only save has no options delta to trigger the normal listener.
+    from .embedded_entry import _reload_relevant
+
+    if schedule_reload and _reload_relevant(options) == _reload_relevant(entry.options):
+        hass.config_entries.async_schedule_reload(entry.entry_id)
 
 
 def remote_mcp_config_error(namespace: str, url: str) -> str | None:
