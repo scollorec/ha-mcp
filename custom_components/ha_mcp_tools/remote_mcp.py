@@ -46,23 +46,24 @@ def remote_mcp_config_error(namespace: str, url: str) -> str | None:
     return None
 
 
-def remote_mcp_form_error(
-    user_input: Mapping[str, Any],
-) -> tuple[str, str] | None:
-    """Return the HA options-flow field and error for an invalid upstream."""
-    namespace = str(
-        user_input.get(OPT_REMOTE_MCP_NAMESPACE, "remote") or "remote"
-    ).strip().lower() or "remote"
+def remote_mcp_form_errors(user_input: Mapping[str, Any]) -> dict[str, str]:
+    """Return field errors for invalid remote MCP options."""
+    namespace = (
+        str(user_input.get(OPT_REMOTE_MCP_NAMESPACE, "remote") or "remote")
+        .strip()
+        .lower()
+        or "remote"
+    )
     url = str(user_input.get(OPT_REMOTE_MCP_URL, "") or "").strip()
     error = remote_mcp_config_error(namespace, url)
     if error is None:
-        return None
+        return {}
     field = (
         OPT_REMOTE_MCP_NAMESPACE
         if error == "invalid_remote_mcp_namespace"
         else OPT_REMOTE_MCP_URL
     )
-    return field, error
+    return {field: error}
 
 
 def remote_mcp_config_snapshot(
@@ -116,9 +117,7 @@ def register_remote_mcp_upstream(
     mcp.add_provider(ProxyProvider(client_factory, cache_ttl=30.0), namespace=namespace)
 
 
-def register_remote_mcp_if_configured(
-    mcp: Any, config: tuple[str, str, str]
-) -> None:
+def register_remote_mcp_if_configured(mcp: Any, config: tuple[str, str, str]) -> None:
     """Register the optional upstream, isolating failures from HA-MCP startup."""
     namespace, url, bearer_token = config
     if not url:
