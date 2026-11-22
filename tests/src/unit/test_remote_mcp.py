@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any, cast
 from unittest.mock import Mock
 
 import pytest
@@ -10,7 +11,7 @@ from custom_components.ha_mcp_tools.remote_mcp import (
     register_remote_mcp_upstream,
     remote_mcp_config_error,
 )
-from ha_mcp._vendor.fastmcp.server.providers.proxy import ProxyProvider
+from ha_mcp._vendor.fastmcp.server.providers.proxy import ProxyClient, ProxyProvider
 
 ENDPOINT = "http://192.168.1.55:8765/mcp"
 
@@ -61,7 +62,7 @@ def test_provider_is_registered_under_namespace_and_uses_explicit_auth_only() ->
     assert mcp.add_provider.call_args.kwargs == {"namespace": "fedora"}
 
     # Constructing the proxy client is local-only; it does not contact the URL.
-    client = provider.client_factory()
+    client = cast(ProxyClient[Any], provider.client_factory())
     assert client.transport.url == ENDPOINT
     assert client.transport.headers == {"Authorization": "Bearer upstream-secret"}
     assert client._transport_options.forward_incoming_headers is False
