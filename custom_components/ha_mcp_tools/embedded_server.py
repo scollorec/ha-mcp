@@ -250,7 +250,9 @@ def _register_core_mcp_provider(mcp: Any, config: tuple[str, str]) -> None:
         return
 
     try:
-        from ha_mcp.providers.home_assistant_core import register_home_assistant_core_mcp
+        from ha_mcp.providers.home_assistant_core import (
+            register_home_assistant_core_mcp,
+        )
     except ModuleNotFoundError as err:
         if err.name != "ha_mcp.providers.home_assistant_core":
             raise
