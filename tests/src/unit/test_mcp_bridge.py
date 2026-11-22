@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+from typing import Any
 from unittest.mock import AsyncMock
 
 import probatio
 import pytest
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 
@@ -28,7 +29,9 @@ def _entry(coordinator: object, *, entry_id: str = "mcp-entry", state: str = "lo
     )
 
 
-def _install_entry(hass, entry, monkeypatch) -> None:
+def _install_entry(
+    hass: HomeAssistant, entry: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr(
         hass.config_entries,
         "async_get_entry",
@@ -37,7 +40,7 @@ def _install_entry(hass, entry, monkeypatch) -> None:
 
 
 def test_connections_list_contains_metadata_but_not_endpoint_or_secret(
-    hass, monkeypatch
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     coordinator = SimpleNamespace(
         server_info=SimpleNamespace(
@@ -71,7 +74,7 @@ def test_connections_list_contains_metadata_but_not_endpoint_or_secret(
 
 
 async def test_list_tools_refreshes_core_and_serializes_schema_and_annotations(
-    hass, monkeypatch
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     tool = SimpleNamespace(
         name="system_info",
@@ -124,7 +127,9 @@ async def test_list_tools_refreshes_core_and_serializes_schema_and_annotations(
     ]
 
 
-async def test_list_tools_fails_closed_when_refresh_fails(hass, monkeypatch) -> None:
+async def test_list_tools_fails_closed_when_refresh_fails(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     coordinator = SimpleNamespace(
         data=[],
         async_refresh=AsyncMock(),
@@ -138,7 +143,7 @@ async def test_list_tools_fails_closed_when_refresh_fails(hass, monkeypatch) -> 
 
 
 async def test_call_tool_uses_core_wrapper_and_validated_arguments(
-    hass, monkeypatch
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     tool = SimpleNamespace(
         name="inspect_command",
@@ -192,7 +197,7 @@ async def test_call_tool_uses_core_wrapper_and_validated_arguments(
 
 
 async def test_call_tool_rejects_invalid_arguments_before_upstream_call(
-    hass, monkeypatch
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     tool = SimpleNamespace(
         name="write_file",
@@ -222,7 +227,9 @@ async def test_call_tool_rejects_invalid_arguments_before_upstream_call(
     tool.async_call.assert_not_awaited()
 
 
-async def test_connection_must_be_a_loaded_core_mcp_entry(hass, monkeypatch) -> None:
+async def test_connection_must_be_a_loaded_core_mcp_entry(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     coordinator = SimpleNamespace(
         data=[],
         async_refresh=AsyncMock(),
