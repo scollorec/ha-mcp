@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from collections.abc import Mapping
 from typing import Any
@@ -17,6 +18,7 @@ from homeassistant.helpers.selector import (
 
 from .const import OPT_CORE_MCP_ENTRY_ID, OPT_CORE_MCP_NAMESPACE
 
+_LOGGER = logging.getLogger(__name__)
 _NAMESPACE_RE = re.compile(r"[a-z][a-z0-9_]{0,31}")
 
 
@@ -34,10 +36,19 @@ def core_mcp_option_fields(
     form_values: Mapping[str, Any],
 ) -> dict[Any, Any]:
     """Build the selector for Core MCP config entries and their namespace."""
-    entries = sorted(
-        hass.config_entries.async_entries("mcp"),
-        key=lambda entry: (entry.title.casefold(), entry.entry_id),
-    )
+    try:
+        entries = sorted(
+            hass.config_entries.async_entries("mcp"),
+            key=lambda entry: (entry.title.casefold(), entry.entry_id),
+        )
+    except Exception:
+        # This selector is an optional convenience. A temporary registry read
+        # failure must not make the entire server options form unavailable.
+        _LOGGER.warning(
+            "Could not list Home Assistant Core MCP connections for the options form",
+            exc_info=True,
+        )
+        entries = []
     options = [SelectOptionDict(value="", label="Disabled")]
     known_ids: set[str] = set()
     for entry in entries:
