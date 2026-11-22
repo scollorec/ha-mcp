@@ -217,7 +217,7 @@ def register_home_assistant_core_mcp(
     namespace: str,
 ) -> HomeAssistantCoreMCPProvider:
     """Register one selected Core MCP entry under a collision-safe namespace."""
-    normalized_namespace = namespace.strip().lower()
+    normalized_namespace = namespace.strip()
     if not entry_id:
         raise ValueError("A Home Assistant Core MCP entry ID is required")
     if not _NAMESPACE_RE.fullmatch(normalized_namespace):
