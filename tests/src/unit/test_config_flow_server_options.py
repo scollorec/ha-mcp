@@ -24,10 +24,15 @@ from custom_components.ha_mcp_tools.const import (
     DATA_OAUTH_CLIENT_ID,
     DATA_OAUTH_CLIENT_SECRET,
     DATA_OAUTH_SIGNING_KEY,
+    DATA_REMOTE_MCP_BEARER_TOKEN,
     DATA_WEBHOOK_ID,
     OPT_ADMIN_TOKEN_REPLACEMENT,
     OPT_OAUTH_ALLOW_ANY_CALLBACK,
     OPT_PIP_SPEC,
+    OPT_REMOTE_MCP_BEARER_TOKEN,
+    OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN,
+    OPT_REMOTE_MCP_NAMESPACE,
+    OPT_REMOTE_MCP_URL,
     OPT_SERVER_PORT,
     OPT_WEBHOOK_AUTH,
     WEBHOOK_AUTH_LEGACY,
@@ -62,6 +67,7 @@ from ._config_flow_core import (
 from ._server_entry import add_server_entry, replace_server, set_up
 
 CALLBACK = "https://chatgpt.example/cb"
+REMOTE_MCP_URL = "http://192.168.1.55:8765/mcp"
 
 
 @pytest.fixture(autouse=True)
@@ -156,6 +162,77 @@ async def test_removing_every_callback_sticks(hass: HomeAssistant) -> None:
     await _save(hass, entry, {})
 
     assert entry.options[OPT_OAUTH_REDIRECT_ALLOWLIST] == []
+
+
+async def test_remote_mcp_upstream_settings_are_saved(
+    hass: HomeAssistant,
+) -> None:
+    entry = add_options_entry(hass)
+
+    await _save(
+        hass,
+        entry,
+        {OPT_REMOTE_MCP_NAMESPACE: "Fedora", OPT_REMOTE_MCP_URL: REMOTE_MCP_URL},
+    )
+
+    assert entry.options[OPT_REMOTE_MCP_NAMESPACE] == "fedora"
+    assert entry.options[OPT_REMOTE_MCP_URL] == REMOTE_MCP_URL
+
+
+async def test_remote_mcp_bearer_token_is_stored_outside_options(
+    hass: HomeAssistant,
+) -> None:
+    entry = add_options_entry(hass, data={DATA_WEBHOOK_ID: "w"})
+    token = "remote-upstream-secret"
+
+    await _save(hass, entry, {OPT_REMOTE_MCP_BEARER_TOKEN: token})
+
+    assert entry.data[DATA_REMOTE_MCP_BEARER_TOKEN] == token
+    assert OPT_REMOTE_MCP_BEARER_TOKEN not in entry.options
+    assert token not in str(entry.options)
+
+
+async def test_remote_mcp_token_can_be_cleared(
+    hass: HomeAssistant,
+) -> None:
+    entry = add_options_entry(
+        hass,
+        data={DATA_WEBHOOK_ID: "w", DATA_REMOTE_MCP_BEARER_TOKEN: "old-token"},
+    )
+
+    await _save(hass, entry, {OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN: True})
+
+    assert DATA_REMOTE_MCP_BEARER_TOKEN not in entry.data
+
+
+async def test_invalid_remote_mcp_namespace_is_rejected(
+    hass: HomeAssistant,
+) -> None:
+    entry = add_options_entry(hass)
+
+    result = await _save(
+        hass,
+        entry,
+        {OPT_REMOTE_MCP_NAMESPACE: "Bad Name", OPT_REMOTE_MCP_URL: REMOTE_MCP_URL},
+    )
+
+    assert result["errors"] == {
+        OPT_REMOTE_MCP_NAMESPACE: "invalid_remote_mcp_namespace"
+    }
+
+
+async def test_invalid_remote_mcp_url_is_rejected(
+    hass: HomeAssistant,
+) -> None:
+    entry = add_options_entry(hass)
+
+    result = await _save(
+        hass,
+        entry,
+        {OPT_REMOTE_MCP_URL: "ftp://example.com/mcp"},
+    )
+
+    assert result["errors"] == {OPT_REMOTE_MCP_URL: "invalid_remote_mcp_url"}
 
 
 async def test_a_save_that_changes_only_the_callbacks_needs_no_reload(
