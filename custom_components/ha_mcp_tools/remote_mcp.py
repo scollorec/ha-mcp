@@ -1,8 +1,8 @@
-"""Generic remote MCP upstream registration for the embedded HA-MCP server.
+"""Generic remote MCP configuration and registration for HA-MCP.
 
-The component imports this module from the embedded worker thread only. It has
-no module-level dependency on ha-mcp, so config-flow and HA startup imports stay
-lightweight.
+This module is safe to import in Home Assistant's main thread. Imports of
+ha-mcp's FastMCP internals are delayed until the embedded worker registers the
+upstream.
 """
 
 from __future__ import annotations
