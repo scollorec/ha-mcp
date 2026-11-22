@@ -22,6 +22,8 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     DATA_REMOTE_MCP_BEARER_TOKEN,
+    OPT_REMOTE_MCP_BEARER_TOKEN,
+    OPT_REMOTE_MCP_CLEAR_BEARER_TOKEN,
     OPT_REMOTE_MCP_NAMESPACE,
     OPT_REMOTE_MCP_URL,
 )
