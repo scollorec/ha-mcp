@@ -1,8 +1,6 @@
 """Config + options flow for the HA-MCP custom component.
 
-One config flow serves two entry types under the shared domain, chosen from a
-menu on the first step:
-
+One config flow serves two entry types under the shared domain, chosen from a menu on the first step:
 * ``tools`` — the privileged file / YAML services (the original component).
   A single confirm step creates the entry. Single-instance, keyed on
   ``DOMAIN``.
