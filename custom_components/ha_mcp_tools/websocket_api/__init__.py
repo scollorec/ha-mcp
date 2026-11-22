@@ -400,8 +400,8 @@ from .lookups import (
 )
 from .mcp_bridge import (
     _do_mcp_call_tool,
-    do_mcp_connections,
     _do_mcp_list_tools,
+    do_mcp_connections,
     mcp_call_tool_prep,
     mcp_list_tools_prep,
 )
