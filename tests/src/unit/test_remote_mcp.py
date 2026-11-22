@@ -16,8 +16,8 @@ from custom_components.ha_mcp_tools.remote_mcp import (
     remote_mcp_config_error,
     remote_mcp_config_snapshot,
 )
-from ha_mcp.providers.home_assistant_core import HomeAssistantCoreMCPProvider
 from ha_mcp._vendor.fastmcp.server.providers.proxy import ProxyProvider
+from ha_mcp.providers.home_assistant_core import HomeAssistantCoreMCPProvider
 
 ENDPOINT = "http://192.168.1.55:8765/mcp"
 
