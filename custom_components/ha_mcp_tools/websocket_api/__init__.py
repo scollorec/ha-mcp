@@ -388,6 +388,13 @@ from .dashboards import (
     _do_dashboards,
 )
 from .logbook import _do_logbook_events, _logbook_events_prep
+from .mcp_bridge import (
+    _do_mcp_call_tool,
+    _do_mcp_connections,
+    _do_mcp_list_tools,
+    _mcp_call_tool_prep,
+    _mcp_list_tools_prep,
+)
 from .lookups import (
     _blueprint_get_prep,
     _do_blueprint_get,
@@ -417,6 +424,9 @@ from .schemas import (
     _helpers_list_schema,
     _info_schema,
     _logbook_events_schema,
+    _mcp_call_tool_schema,
+    _mcp_connections_schema,
+    _mcp_list_tools_schema,
     _overview_schema,
     _reference_data_schema,
     _registries_schema,
@@ -503,6 +513,9 @@ def _command_specs() -> list[tuple[dict[Any, Any], Any, Any]]:
     """
     return [
         (_info_schema(), lambda hass, msg: do_info(hass), None),
+        (_mcp_connections_schema(), _do_mcp_connections, None),
+        (_mcp_list_tools_schema(), _do_mcp_list_tools, _mcp_list_tools_prep),
+        (_mcp_call_tool_schema(), _do_mcp_call_tool, _mcp_call_tool_prep),
         (_search_schema(), do_search, _search_prep),
         (_overview_schema(), _do_overview, None),
         (_helpers_list_schema(), do_helpers_list, _helpers_list_prep),
