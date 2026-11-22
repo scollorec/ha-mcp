@@ -16,6 +16,7 @@ from ha_mcp._vendor.fastmcp.exceptions import ToolError
 from ha_mcp._vendor.fastmcp.server.providers.base import Provider
 from ha_mcp._vendor.fastmcp.tools.base import Tool, ToolResult
 from ha_mcp._vendor.fastmcp.utilities.tasks import TaskConfig
+from ha_mcp._vendor.fastmcp.utilities.versions import VersionSpec
 from ha_mcp.client.websocket_client import WebSocketManager
 
 _LOGGER = logging.getLogger(__name__)
@@ -184,7 +185,9 @@ class HomeAssistantCoreMCPProvider(Provider):
         """List tools for FastMCP discovery."""
         return await self._get_cached_tools()
 
-    async def _get_tool(self, name: str, version: Any = None) -> Tool | None:
+    async def _get_tool(
+        self, name: str, version: VersionSpec | None = None
+    ) -> Tool | None:
         """Resolve a cached tool; the HA component revalidates it before calling."""
         tools = await self._get_cached_tools()
         for tool in tools:
