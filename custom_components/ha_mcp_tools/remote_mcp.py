@@ -116,7 +116,7 @@ def register_remote_mcp_upstream(
     mcp.add_provider(ProxyProvider(client_factory, cache_ttl=30.0), namespace=namespace)
 
 
-def register_remote_mcp_upstream_if_configured(
+def register_remote_mcp_if_configured(
     mcp: Any, config: tuple[str, str, str]
 ) -> None:
     """Register the optional upstream, isolating failures from HA-MCP startup."""
